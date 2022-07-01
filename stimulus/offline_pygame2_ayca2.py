@@ -5,10 +5,12 @@
 
 import pygame, random, time, os, sys
 import numpy as np
+from pylsl import local_clock, StreamInfo, StreamOutlet
 
-#we will borrow PsychoPy's parallel feature to record stimulus timings using the parallel port
+#
+# we will borrow PsychoPy's parallel feature to record stimulus timings using the parallel port
 # from psychopy import core, parallel
-#parallel.setPortAddress(61432) #61432 is the lab port address
+# parallel.setPortAddress(61432) #61432 is the lab port address
 
 def offline():
 
@@ -16,6 +18,15 @@ def offline():
     start_time = time.time()
     time_past_total = time.time() - start_time
     print(f"time passed: {time_past_total}")
+
+    # # Define the marker stream
+    info = StreamInfo(name='pygame_markers',
+                        type='Markers',
+                        channel_count=1,
+                        nominal_srate=0,
+                        channel_format='string',
+                        source_id='pygame_markers')
+    marker_stream = StreamOutlet(info)
 
     #specify screen and background sizes
     screen = pygame.display.set_mode((600,600))
@@ -32,17 +43,10 @@ def offline():
 
 
     #specify the grid content
-
-    # grid = [
-    #
-    #         "<^", ">v",
-    # ]
-
     grid = [
         " ^ ",
         "< >",
-        " v ",
-    ]
+        " v ",]
 
     phrase = "abcd" #this is used to store the string at the bottom of the interface
 
@@ -55,16 +59,18 @@ def offline():
 
     oldhighlight = [0,0]
 
-    numtrials = 0 # counter for highlighting, when it is equal to n_trials, new target is made
+    
     num_iterations = 3
     # targets = [[1,1],[3,5],[1,0],[2,2],[3,1],[4,0],[6,5]]
     targets = [[0,1],[1,0],[1,2],[2,1]]
     targets_list = targets*num_iterations
-    n_trials = len(targets_list)
-    print("AAAAAAAAAAAAAAA", n_trials)
-
-    targetcounter = 0
-
+    n_repetitions = len(targets_list)
+    n_trials = 4
+    n_blocks = 5
+    
+    # counters
+    repetition_no = 0 # counter for highlighting, when it is equal to n_repetitions, new target is made
+    trial_no = 0
     waittime = 3000#3000
 
     #we will use this function to write the letters
@@ -105,11 +111,8 @@ def offline():
 
     def makeHighlighted(target_list, counter, oldhighlight):
         highlight = target_list[counter]
-        print("GONNA LOSE MY MIND",oldhighlight)
         while (highlight[0] == oldhighlight[0]) and (highlight[1] == oldhighlight[1]) : #adjusts repeated values
-            print("BBBBBBBBBBB", highlight)
             highlight = random.choice([[0, 1], [1, 0], [1, 2], [2, 1]])
-            print("CCCCCCCCCCC", highlight)
         
         textsurface = write(grid[highlight[1]][highlight[0]],(255,255,100))
         background.blit(textsurface, (length * highlight[0] + length/4, height * (highlight[1]) + height/4))     
@@ -119,36 +122,38 @@ def offline():
 
         return highlight
 
-    #pygame uses a main loop to generate the interface
-    while mainloop:
-        milliseconds = clock.tick(FPS)  # milliseconds passed since last frame
-        seconds = milliseconds / 1000.0 # seconds passed since last frame
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                mainloop = False # pygame window closed by user
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    mainloop = False # user pressed ESC
 
-        if targetcounter < len(targets):
-            if numtrials == 0:
-                makeTarget(targets[targetcounter])
+    milliseconds = clock.tick(FPS)  # milliseconds passed since last frame
+    seconds = milliseconds / 1000.0 # seconds passed since last frame
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            mainloop = False # pygame window closed by user
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                mainloop = False # user pressed ESC
+    for block_no in np.arange(n_blocks):
+        print("block_no",block_no)
+        if trial_no < n_trials:
+            print(f"start trial: {trial_no}")
+            if repetition_no == 0:
+                print(f"start new target: {targets[repetition_no]}")
+
+                makeTarget(targets[trial_no])
                 screen.blit(background, (0,0)) #clean whole screen
                 pygame.display.flip()
                 pygame.time.wait(waittime)
-                numtrials += 1
-            elif numtrials == (n_trials):
-                targetcounter += 1
+                repetition_no += 1
+            elif repetition_no == (n_repetitions):
+
 
                 time_past_total = time.time() - start_time
                 print(f"time passed, end of symbol session: {time_past_total}")
-                numtrials = 0
+                repetition_no = 0
             else:
-                print(numtrials)
                 makeStandard()
                 pygame.time.wait(2)
                 np.random.shuffle(targets_list)
-                oldhighlight = makeHighlighted(targets_list, numtrials, oldhighlight)
+                oldhighlight = makeHighlighted(targets_list, repetition_no, oldhighlight)
                 print(f"old highlight {oldhighlight}")
 
                 screen.blit(background, (0,0)) # clean whole screen
@@ -159,10 +164,11 @@ def offline():
                 time_past_total = time.time() - start_time
                 print(f"time passed: {time_past_total}")
 
-                numtrials += 1
+            trial_no += 1
 
-        else:
-            pygame.quit()
+        block_no += 1
+        # pygame.quit()
+        
     
 
 
