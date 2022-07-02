@@ -86,7 +86,7 @@ class Paradigm(object):
         #letter_surface = letter_surface.convert_alpha()
         return letter_surface
 
-    def draw_arrows(self, target, highlighted, is_target):
+    def draw_arrows(self, target, highlighted, is_target, display_time=None):
         # TODO: Add cues input which determines which arrows to show.
         # Define the arrows.
         # TODO: Define a better grid.
@@ -115,11 +115,14 @@ class Paradigm(object):
         # Update the screen
         pg.display.flip()
 
-        pg.time.delay(1000)
+        if display_time is not None:
+            pg.time.delay(int(display_time*1000))
+
+            # Draw back to white.
+            self.draw_arrows(None, False, False)
 
     def convert_target(self, target):
         # Converts the target from name to position.
-        self.possible_targets = [(0, 1), (1, 0), (1, 2), (2, 1)]
 
         if target == 'up':
             return self.possible_targets[0]
@@ -129,6 +132,17 @@ class Paradigm(object):
             return self.possible_targets[2]
         if target == 'down':
             return self.possible_targets[3]
+    
+    def convert_position(self, position):
+        # Converts the target from position to name.
+        if position == self.possible_targets[0]:
+            return 'up'
+        if position == self.possible_targets[1]:
+            return 'left'
+        if position == self.possible_targets[2]:
+            return 'right'
+        if position == self.possible_targets[3]:
+            return 'down'
 
     def get_targets(self):
         # Create an empty list for the order of targets to run through.
@@ -264,16 +278,32 @@ class Paradigm(object):
                 # Push the marker to the LSL stream.
                 # Pushing the marker before the drawing because I don't know
                 # how long the drawing takes to return.
+                target = targets[trial_num - 1]
                 self.marker_stream.push_sample([f'target_{target}-{local_clock()}'])
 
                 # Display the target.
-                target = targets[trial_num - 1]
-                paradigm.draw_arrows(self.convert_target(target), highlighted=False, is_target=True) # TODO: Implement target drawing.
+                target_position = self.convert_target(target)
+                paradigm.draw_arrows(target_position,
+                                     highlighted=False,
+                                     is_target=True,
+                                     display_time=exp_durations['target_length'])
 
                 # Now do all the highlighting of arrows at random.
                 # Still need to rewrite this part.
-                #while (highlight[0] == oldhighlight[0]) and (highlight[1] == oldhighlight[1]) : #adjusts repeated values
-                #    highlight = random.choice([[0, 1], [1, 0], [1, 2], [2, 1]])
+                old_highlight = target_position # NOTE: Solves adjacency problem.
+                for _ in range(exp_durations['num_highlights']):
+                    highlight = random.choice(self.possible_targets)
+                    while (highlight[0] == old_highlight[0]) and (highlight[1] == old_highlight[1]) : #adjusts repeated values
+                        highlight = random.choice(self.possible_targets)
+
+                    # Push sample before drawing, because it'll wait during the drawing!
+                    highlight_string = self.convert_position(highlight)
+                    self.marker_stream.push_sample([f'highlight_{highlight_string}-{local_clock()}'])
+                    paradigm.draw_arrows(highlight, 
+                                        highlighted=True,
+                                        is_target=False,
+                                        display_time=exp_durations['highlight_length'])
+                    old_highlight = highlight
 
                 # If the total number of trials within a block is reached.
                 if trial_num == self.tot_trials:
@@ -385,7 +415,8 @@ if __name__=="__main__":
         'target_length': 1,
         'inter_highlight_length': 0.2,
         'inter_block_length': 3,
-        'inter_trial_length': 1
+        'inter_trial_length': 1,
+        'num_highlights': 10
     }
 
     # Define the targets that are going to be shown
