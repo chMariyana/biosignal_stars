@@ -187,6 +187,33 @@ class Paradigm(object):
             np.random.shuffle(pick_list)
 
             return pick_list
+    
+    def is_adjacency(self, tuple_list):
+        # Gets as input a list of tuples.
+        # Checks if any two tuples that are directly after each other
+        # have exactly the same elements.
+
+        # If there is only one element in the list, there is no repetition.
+        if len(tuple_list) == 1:
+            return False
+
+        previous_tuple = tuple_list[0]
+        for tuple in tuple_list[1:]:
+            if previous_tuple == tuple:
+                return True
+            previous_tuple = tuple
+        
+        return False
+    
+    def shuffle(self, highlights):
+        # Shuffles the highlights until there is no repeating neighbours.
+        # Initial shuffle.
+        random.shuffle(highlights) # Changes highlights in place.
+
+        while self.is_adjacency(highlights):
+            random.shuffle(highlights)
+        
+        return highlights
 
     def run_exp (self, tot_trials, tot_blocks):
         # Set the class attributes.
@@ -313,12 +340,18 @@ class Paradigm(object):
                                      display_time=exp_durations['target_length'])
 
                 # Now do all the highlighting of arrows at random.
-                # Still need to rewrite this part.
-                old_highlight = target_position # NOTE: Solves adjacency problem.
-                for _ in range(exp_durations['num_highlights']):
-                    highlight = random.choice(self.possible_targets)
-                    while (highlight[0] == old_highlight[0]) and (highlight[1] == old_highlight[1]) : #adjusts repeated values
-                        highlight = random.choice(self.possible_targets)
+                # We want to guarantee that the target is flashed.
+                # Thus we take the possible targets as a basis, and add more highlights if necessary.
+                times_basis = int(np.floor(exp_durations['num_highlights'] / len(self.possible_targets)))
+                highlights = self.possible_targets * times_basis
+                difference = exp_durations['num_highlights'] - (len(self.possible_targets) * times_basis)
+                for _ in range(difference):
+                    highlights.append(random.choice(self.possible_targets))
+
+                # Shuffle the highlights until there is no adjacency of the same target.
+                highlights = self.shuffle(highlights)
+
+                for highlight in highlights:
 
                     # Push sample before drawing, because it'll wait during the drawing!
                     highlight_string = self.convert_position(highlight)
@@ -327,7 +360,6 @@ class Paradigm(object):
                                         highlighted=True,
                                         is_target=False,
                                         display_time=exp_durations['highlight_length'])
-                    old_highlight = highlight
 
                 # At the end of the trial, clear the screen again.
                 paradigm.clear_screen()
