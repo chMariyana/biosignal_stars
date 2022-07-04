@@ -63,8 +63,6 @@ class Paradigm(object):
         self.horizontal_margin = self.column_width / 4
         self.vertical_margin = self.lines_height / 4
 
-        print(self.column_width)
-
         # Define the fonts.
         self.arrow_font = pygame.font.SysFont("None", 190)
         self.msg_font = pg.font.Font(pg.font.get_default_font(), 50)
