@@ -144,6 +144,18 @@ class Paradigm(object):
         if position == self.possible_targets[3]:
             return 'down'
 
+    def draw_baseline_fix(self, delay=1):
+        letter_surface = self.get_letter_surface('+', colour=WHITE)
+        letter_surface_rect = letter_surface.get_rect()
+        letter_surface_rect.center = (self.center_x, self.center_y)
+        self.window.blit(letter_surface, letter_surface_rect)
+
+        # Update the screen.
+        pg.display.flip()
+
+        if delay is not None:
+            pg.time.delay(int(delay*1000))
+
     def get_targets(self):
         # Create an empty list for the order of targets to run through.
         pick_list = []
@@ -267,6 +279,18 @@ class Paradigm(object):
             
             if run_exp:
                 # Trial start
+
+                # Show the baseline fix.
+                # Again, push the sample first because the drawing will hang.
+                self.marker_stream.push_sample(
+                    [f'baseline_for_trial_{trial_num}-{local_clock()}']
+                )
+                paradigm.draw_baseline_fix(delay=exp_durations['baseline_length'])
+                paradigm.clear_screen()
+
+                # Add a delay between the baseline and drawing the arrows.
+                pg.time.delay(int(exp_durations['delay_baseline_arrows'] * 1000))
+
                 # Show the targets.
                 paradigm.draw_arrows(target=None, highlighted=False, is_target=False)
 
@@ -304,6 +328,9 @@ class Paradigm(object):
                                         is_target=False,
                                         display_time=exp_durations['highlight_length'])
                     old_highlight = highlight
+
+                # At the end of the trial, clear the screen again.
+                paradigm.clear_screen()
 
                 # If the total number of trials within a block is reached.
                 if trial_num == self.tot_trials:
@@ -413,6 +440,8 @@ if __name__=="__main__":
     exp_durations = {
         'highlight_length': 0.25,
         'target_length': 1,
+        'baseline_length': 3,
+        'delay_baseline_arrows': 1,
         'inter_highlight_length': 0.2,
         'inter_block_length': 3,
         'inter_trial_length': 1,
