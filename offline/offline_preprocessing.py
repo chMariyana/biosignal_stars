@@ -4,21 +4,17 @@ Preprocessing of the P300 data.
 
 Author:
     Karahan Yilmazer - 16.04.2022
+    Nathan van Beelen
+    Ayça Kepçe
 
-Note:
-Adapted by Nathan van Beelen and Ayça Kepçe.
-''' 
+'''
 
 #!%matplotlib qt
 
 import glob
-import numpy as np
 import mne
-import pyxdf
-import re
-from datetime import datetime, timezone
+
 import pickle
-from sklearn.preprocessing import LabelEncoder
 from utils import load_xdf_data
 
 
@@ -38,7 +34,7 @@ for trial_no, trial in enumerate(sorted(glob.glob(file))):
 
     # Implement the band-pass filter
     flow, fhigh = 0.1, 10
-    raw_filt = raw_filt.filter(flow, fhigh)
+    raw_filt = raw.filter(flow, fhigh)
     
     # Apply Common Average Referencing.
     raw_car, _ = mne.set_eeg_reference(raw_filt, 'average', copy = True, ch_type = 'eeg')
@@ -86,7 +82,7 @@ sub_epochs.plot_psd()
 
 
 # %%
-with open(r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\sub_epochs_trial.pkl', 'wb') as file:
+with open(r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\sub_epochs\sub_epochs_trial.pkl', 'wb') as file:
       
     # Save the sub-epochs for signal processing
     pickle.dump(sub_epochs, file)
