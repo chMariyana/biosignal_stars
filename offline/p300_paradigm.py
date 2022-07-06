@@ -6,6 +6,7 @@
 import pygame
 import random
 import time
+import pickle
 
 import pygame as pg
 import numpy as np
@@ -20,6 +21,9 @@ YELLOW = (255, 255, 0)
 
 WINDOW_WIDTH = 600 # 600
 WINDOW_HEIGHT = 600 # 600
+# Load the configurations of the paradigm
+with open(r'./config_durations.pkl', 'rb') as file:
+    exp_durations = pickle.load(file)
 
 class Paradigm(object):
 
@@ -465,18 +469,6 @@ class Paradigm(object):
 #routines. We should change these to work in conjunction once we get
 #the classifiers working sometime in the future.
 if __name__=="__main__":
-    # Define the durations for each part of the paradigm.
-    # Time is in seconds.
-    exp_durations = {
-        'highlight_length': 0.25,
-        'target_length': 1,
-        'baseline_length': 3,
-        'delay_baseline_arrows': 1,
-        'inter_highlight_length': 0.2,
-        'inter_block_length': 3,
-        'inter_trial_length': 1,
-        'num_highlights': 10
-    }
 
     # Define the targets that are going to be shown
     targets = ['left', 'right', 'up', 'down']
