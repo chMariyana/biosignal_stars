@@ -198,13 +198,13 @@ def create_config():
 
     params = {
             'highlight_length': 0.1,
-            'target_length': 3,
-            'baseline_length': 0.5,
-            'delay_baseline_arrows': 1,
+            'target_length': 2.5,
+            'baseline_length': 2,
+            'delay_baseline_arrows': 0.1,
             'inter_highlight_length': 0.075,
             'inter_block_length': 3,
-            'inter_trial_length': 2,
-            'num_highlights': 10,
+            'inter_trial_length': 0.1,
+            'num_highlights': 30,
             'target_color': RED,
             'highlight_color': YELLOW
         }
@@ -214,13 +214,13 @@ def create_config():
 
     params = {
             'highlight_length': 0.150,
-            'target_length': 3,
-            'baseline_length': 0.5,
-            'delay_baseline_arrows': 1,
+            'target_length': 2.5,
+            'baseline_length': 2,
+            'delay_baseline_arrows': 0.1,
             'inter_highlight_length': 0.150,
             'inter_block_length': 3,
-            'inter_trial_length': 2,
-            'num_highlights': 10,
+            'inter_trial_length': 0.1,
+            'num_highlights': 15,
             'target_color': RED,
             'highlight_color': YELLOW
         }
@@ -231,13 +231,13 @@ def create_config():
 
     params = {
             'highlight_length': 0.1,
-            'target_length': 3,
-            'baseline_length': 0.5,
-            'delay_baseline_arrows': 1,
+            'target_length': 2.5,
+            'baseline_length': 2,
+            'delay_baseline_arrows': 0.1,
             'inter_highlight_length': 0.075,
             'inter_block_length': 3,
-            'inter_trial_length': 2,
-            'num_highlights': 10,
+            'inter_trial_length': 0.1,
+            'num_highlights': 30,
             'target_color': BLUE,
             'highlight_color': GREEN
         }
@@ -247,13 +247,13 @@ def create_config():
 
     params = {
             'highlight_length': 0.150,
-            'target_length': 3,
-            'baseline_length': 0.5,
-            'delay_baseline_arrows': 1,
+            'target_length': 2.5,
+            'baseline_length': 2,
+            'delay_baseline_arrows': 0.1,
             'inter_highlight_length': 0.150,
             'inter_block_length': 3,
-            'inter_trial_length': 2,
-            'num_highlights': 10,
+            'inter_trial_length': 0.1,
+            'num_highlights': 15,
             'target_color': BLUE,
             'highlight_color': GREEN
         }
