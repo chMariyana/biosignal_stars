@@ -13,17 +13,20 @@ import numpy as np
 
 from pylsl import local_clock, StreamInfo, StreamOutlet
 
+# Load the configurations of the paradigm
+with open(r'./config_short_blue-green.pkl', 'rb') as file:
+    params = pickle.load(file)
+
 # Define custom colors
 GREY = (103, 103, 110)
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
+
+TARGET = (255, 0, 0)
+HIGHLIGHT = (255, 255, 0)
 
 WINDOW_WIDTH = 600 # 600
 WINDOW_HEIGHT = 600 # 600
-# Load the configurations of the paradigm
-with open(r'./config_durations.pkl', 'rb') as file:
-    exp_durations = pickle.load(file)
+
 
 class Paradigm(object):
 
@@ -97,9 +100,9 @@ class Paradigm(object):
         colour = WHITE  
 
         if highlighted:
-            colour = YELLOW
+            colour = HIGHLIGHT
         elif is_target:
-            colour = RED
+            colour = TARGET
 
         # Draw the arrows.
         for y in range(self.lines):
@@ -314,11 +317,11 @@ class Paradigm(object):
                 self.marker_stream.push_sample(
                     [f'baseline_for_trial_{trial_num}-{local_clock()}']
                 )
-                paradigm.draw_baseline_fix(delay=exp_durations['baseline_length'])
+                paradigm.draw_baseline_fix(delay=params['baseline_length'])
                 paradigm.clear_screen()
 
                 # Add a delay between the baseline and drawing the arrows.
-                pg.time.delay(int(exp_durations['delay_baseline_arrows'] * 1000))
+                pg.time.delay(int(params['delay_baseline_arrows'] * 1000))
 
                 # Show the targets.
                 paradigm.draw_arrows(target=None, highlighted=False, is_target=False)
@@ -339,14 +342,14 @@ class Paradigm(object):
                 paradigm.draw_arrows(target_position,
                                      highlighted=False,
                                      is_target=True,
-                                     display_time=exp_durations['target_length'])
+                                     display_time=params['target_length'])
 
                 # Now do all the highlighting of arrows at random.
                 # We want to guarantee that the target is flashed.
                 # Thus we take the possible targets as a basis, and add more highlights if necessary.
-                times_basis = int(np.floor(exp_durations['num_highlights'] / len(self.possible_targets)))
+                times_basis = int(np.floor(params['num_highlights'] / len(self.possible_targets)))
                 highlights = self.possible_targets * times_basis
-                difference = exp_durations['num_highlights'] - (len(self.possible_targets) * times_basis)
+                difference = params['num_highlights'] - (len(self.possible_targets) * times_basis)
                 for _ in range(difference):
                     highlights.append(random.choice(self.possible_targets))
 
@@ -361,7 +364,7 @@ class Paradigm(object):
                     paradigm.draw_arrows(highlight, 
                                         highlighted=True,
                                         is_target=False,
-                                        display_time=exp_durations['highlight_length'])
+                                        display_time=params['highlight_length'])
 
                 # At the end of the trial, clear the screen again.
                 paradigm.clear_screen()
@@ -395,7 +398,7 @@ class Paradigm(object):
                     self.marker_stream.push_sample([f'pause-{local_clock()}'])
 
                     # Calculate the random pause duration.
-                    wait_duration = exp_durations['inter_trial_length'] \
+                    wait_duration = params['inter_trial_length'] \
                             + np.round(np.random.uniform(0, 1), 2)
                     
                     # Start the timer.
@@ -434,7 +437,7 @@ class Paradigm(object):
 
                     # Start the timer.
                     timer_start = local_clock()
-                    while local_clock() - timer_start < exp_durations['inter_block_length']:
+                    while local_clock() - timer_start < params['inter_block_length']:
                         pass
 
                     # Update the screen.
@@ -482,7 +485,7 @@ if __name__=="__main__":
     window.fill(GREY)
 
     # Initialise the Paradigm object to manage the functions and variables.
-    paradigm = Paradigm(window, exp_durations, targets)
+    paradigm = Paradigm(window, params, targets)
 
     # Run the experiment.
     paradigm.run_exp(tot_trials=8, tot_blocks=2)

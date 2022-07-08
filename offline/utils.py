@@ -1,10 +1,6 @@
-from multiprocessing.sharedctypes import RawArray
-import os
+
 import numpy as np
-from scipy.io import loadmat
-from scipy.ndimage import gaussian_filter1d
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 import mne
 import pyxdf
 import re
@@ -193,20 +189,77 @@ def create_config():
     Cofiguration file that creates a pkl file to hold the durations
     used in the paradigm.
     """
+    RED = (255, 0, 0)
+    YELLOW = (255, 255, 0)
 
-    exp_durations = {
-            'highlight_length': 0.25,
-            'target_length': 1,
-            'baseline_length': 3,
+    BLUE = (0, 0, 255)
+    GREEN = (0,255,0)
+
+    params = {
+            'highlight_length': 0.1,
+            'target_length': 3,
+            'baseline_length': 0.5,
             'delay_baseline_arrows': 1,
-            'inter_highlight_length': 0.2,
+            'inter_highlight_length': 0.075,
             'inter_block_length': 3,
-            'inter_trial_length': 1,
-            'num_highlights': 10
+            'inter_trial_length': 2,
+            'num_highlights': 10,
+            'target_color': RED,
+            'highlight_color': YELLOW
         }
 
-    with open(r'config_durations.pkl', 'wb') as file:
-        pickle.dump(exp_durations, file)
+    with open(r'config_short_red-yellow.pkl', 'wb') as file:
+        pickle.dump(params, file)
+
+    params = {
+            'highlight_length': 0.150,
+            'target_length': 3,
+            'baseline_length': 0.5,
+            'delay_baseline_arrows': 1,
+            'inter_highlight_length': 0.150,
+            'inter_block_length': 3,
+            'inter_trial_length': 2,
+            'num_highlights': 10,
+            'target_color': RED,
+            'highlight_color': YELLOW
+        }
+
+    with open(r'config_long_red-yellow.pkl', 'wb') as file:
+        pickle.dump(params, file)
+
+
+    params = {
+            'highlight_length': 0.1,
+            'target_length': 3,
+            'baseline_length': 0.5,
+            'delay_baseline_arrows': 1,
+            'inter_highlight_length': 0.075,
+            'inter_block_length': 3,
+            'inter_trial_length': 2,
+            'num_highlights': 10,
+            'target_color': BLUE,
+            'highlight_color': GREEN
+        }
+
+    with open(r'config_short_blue-green.pkl', 'wb') as file:
+        pickle.dump(params, file)
+
+    params = {
+            'highlight_length': 0.150,
+            'target_length': 3,
+            'baseline_length': 0.5,
+            'delay_baseline_arrows': 1,
+            'inter_highlight_length': 0.150,
+            'inter_block_length': 3,
+            'inter_trial_length': 2,
+            'num_highlights': 10,
+            'target_color': BLUE,
+            'highlight_color': GREEN
+        }
+
+    with open(r'config_long_blue-green.pkl', 'wb') as file:
+        pickle.dump(params, file)
+
     return 0
 
 

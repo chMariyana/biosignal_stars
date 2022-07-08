@@ -21,8 +21,8 @@ from utils import load_xdf_data
 
 # %%
 # Load the configurations of the paradigm
-with open(r'./config_durations.pkl', 'rb') as file:
-    exp_durations = pickle.load(file)
+with open(r'./config_short_blue-green.pkl', 'rb') as file:
+    params = pickle.load(file)
 
 #file = r"r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\\raw\\**\\*.xdf"
 file = r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\raw\*.xdf'
@@ -40,16 +40,16 @@ for trial_no, trial in enumerate(sorted(glob.glob(file))):
     raw_car, _ = mne.set_eeg_reference(raw_filt, 'average', copy = True, ch_type = 'eeg')
 
     # Now we want to epoch our data to trials and do a baseline correction.
-    total_trial_duration = exp_durations['baseline_length'] + exp_durations['target_length'] + \
-                           exp_durations['highlight_length'] * exp_durations['num_highlights'] + \
-                           exp_durations['inter_highlight_length'] * (exp_durations['num_highlights'] - 1)
-    tmin, tmax = -exp_durations['baseline_length'], total_trial_duration
+    total_trial_duration = params['baseline_length'] + params['target_length'] + \
+                           params['highlight_length'] * params['num_highlights'] + \
+                           params['inter_highlight_length'] * (params['num_highlights'] - 1)
+    tmin, tmax = -params['baseline_length'], total_trial_duration
     epochs_list.append(mne.Epochs(raw_car,
                         events=event_arr,
                         event_id=event_id,
                         tmin=tmin,
                         tmax=tmax,
-                        baseline=(-exp_durations['baseline_length'], 0), # We apply baseline correction here !!!!!!!!!!!!!
+                        baseline=(-params['baseline_length'], 0), # We apply baseline correction here !!!!!!!!!!!!!
                         preload=True,
                         event_repeated='drop'))
 
@@ -61,7 +61,7 @@ epochs = mne.concatenate_epochs(epochs_list)
 sub_epochs_trials = epochs['trial_begin']
 
 # Now we epoch the trials to get highlights
-tmin, tmax = 0, exp_durations['highlight_length']
+tmin, tmax = 0, params['highlight_length']
 epochs_highlights = mne.Epochs(raw_car,
                     events=event_arr,
                     event_id=event_id,
