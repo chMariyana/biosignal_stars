@@ -14,19 +14,25 @@ import numpy as np
 from pylsl import local_clock, StreamInfo, StreamOutlet
 
 # Load the configurations of the paradigm
-with open(r'./config_short_blue-green.pkl', 'rb') as file:
+with open(r'./config_long_red-yellow.pkl', 'rb') as file:
     params = pickle.load(file)
 
 # Define custom colors
-GREY = (103, 103, 110)
+GREY = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 TARGET = params['target_color']
 HIGHLIGHT = params['highlight_color']
 
-WINDOW_WIDTH = 600 # 600
-WINDOW_HEIGHT = 600 # 600
+# Initialise Pygame
+pg.init()
 
+# Set the window size parameters
+sc = pg.display.Info()
+WIDTH = sc.current_w
+HEIGHT = sc.current_h
+WINDOW_WIDTH = WIDTH # 600
+WINDOW_HEIGHT = HEIGHT # 600
 
 class Paradigm(object):
 
@@ -317,6 +323,7 @@ class Paradigm(object):
                 self.marker_stream.push_sample(
                     [f'baseline_for_trial_{trial_num}-{local_clock()}']
                 )
+                print(params['baseline_length'])
                 paradigm.draw_baseline_fix(delay=params['baseline_length'])
                 paradigm.clear_screen()
 
@@ -476,8 +483,7 @@ if __name__=="__main__":
     # Define the targets that are going to be shown
     targets = ['left', 'right', 'up', 'down']
 
-    # Initialise Pygame
-    pg.init()
+
 
     # Create a Pygame window
     window = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
