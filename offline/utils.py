@@ -13,9 +13,13 @@ import pickle
 from datetime import datetime, timezone
 
 from sklearn.preprocessing import LabelEncoder
+from mne.time_frequency import psd_welch
+from sklearn.model_selection import KFold
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.feature_selection import SequentialFeatureSelector
 
 
-def load_xdf_data(file, device='uhb', with_stim=False):
+def load_xdf_data(file, with_stim=False):
 
     # Read the XDF file
     streams, header = pyxdf.load_xdf(file)
@@ -143,10 +147,7 @@ def load_xdf_data(file, device='uhb', with_stim=False):
     info = mne.create_info(ch_names, sfreq, ch_types)
 
     # Add the system name to the info
-    if device == 'uhb':
-        info['description'] = 'Unicorn Hybrid Black'
-    elif device == 'ac':
-        info['description'] = 'actiCHamp'
+    info['description'] = 'Unicorn Hybrid Black'
 
     raw = mne.io.RawArray(data, info)
 
@@ -208,3 +209,142 @@ def create_config():
     with open(r'config_durations.pkl', 'wb') as file:
         pickle.dump(exp_durations, file)
     return 0
+
+
+def apply_filter_bank(signal, frequency_bands, sfreq=250):
+    # Function to apply filter bank to the signal
+    filter_bank = []
+    for fmin, fmax in frequency_bands.values():
+        filter_bank.append(mne.filter.filter_data(signal,
+                                                  sfreq,
+                                                  fmin,
+                                                  fmax,
+                                                  pad='symmetric'))
+    return filter_bank
+
+
+def chunk_data(epochs, time_length, baseline_margin):
+    # Chunk the data into given time length
+
+    chunked_data = []
+    for i in range(int(2 / time_length)):
+        t_min = np.round(i * (time_length) - baseline_margin, 1)
+        t_max = np.round((i + 1) * (time_length), 1)
+        epoch_i = epochs.copy().crop(tmin=t_min, tmax=t_max, include_tmax=True).shift_time(tshift=-baseline_margin,
+                                                                                           relative=False)
+        chunked_data.append(epoch_i)
+    return chunked_data
+
+
+def process_features(numpy_epochs, epochs, labels, csp=None):
+    """
+    Funtion that extracts the variance, band powers, and CSP features. """
+
+    # X is the feature matrix with shape of (n_trials, n_features)
+    print(f'Epochs shape: {numpy_epochs.shape}.')
+    X = numpy_epochs[:, :, :].var(axis=2)
+
+    # specific frequency bands
+    FREQ_BANDS = {"theta": [4, 8.5],
+                  "alpha": [8.5, 11.5],
+                  "sigma": [11.5, 15.5],
+                  "beta": [15.5, 30]}
+
+    # FFT length and zero-padding is defined
+    power_of_2 = int(np.log2(numpy_epochs.shape[2]))
+    n_per_seg = 2 ** power_of_2
+    n_fft = 128
+    psds, freqs = psd_welch(epochs, n_fft=n_fft, n_per_seg=n_per_seg, picks='eeg', fmin=4, fmax=30.)
+
+    # Normalize the PSDs
+    # Output is of shape (samples, channels, frequencies).
+    psds /= np.sum(psds, axis=-1, keepdims=True)
+
+    # A list for all frequencies, each containing an array of shape (samples, channels)
+    powers = []
+    for fmin, fmax in FREQ_BANDS.values():
+        psds_band = psds[:, :, (freqs >= fmin) & (freqs < fmax)].mean(axis=-1)
+        powers.append(psds_band.reshape(len(psds), -1))
+    powers = np.array(powers)
+    powers = powers.reshape(-1, powers.shape[1])
+
+    X = np.concatenate((X, powers.T), axis=1)  # We add the power to the feature matrix (see tutorial 4).
+
+    # Filter bank CSP
+    filter_bank = apply_filter_bank(numpy_epochs, FREQ_BANDS)
+    # We are running the trainig data, thus we calculate csp
+    if csp == None:
+        for i in np.arange(len(filter_bank)):
+            try:
+                csp = mne.decoding.CSP()
+                features = csp.fit_transform(filter_bank[i], y=labels)
+                np.concatenate((X, features), axis=1)  # We add the features extracted by CSP to the feature matrix.
+            except:
+                csp = mne.decoding.CSP(reg='pca', rank='full')
+                features = csp.fit_transform(filter_bank[i], y=labels)
+                np.concatenate((X, features), axis=1)  # We add the features extracted by CSP to the feature matrix.
+
+    # We are running the test data, so we transform using the train CSP.
+    else:
+        features = csp.transform(numpy_epochs)
+
+    return X, csp
+
+
+def epoching(sub_epochs):
+    """
+    Function to create the dataset in the form of numpy arrays and epochs.  """
+
+    # Order and chunk the epochs for the given length of the epochs
+    print(f"Sub_epochs shape is {sub_epochs.get_data().shape}. No of events, no of channels, no of data points.")
+
+    highlight_down_epochs = sub_epochs['highlight_down']
+    highlight_up_epochs = sub_epochs['highlight_up']
+    epochs_list = [highlight_down_epochs, highlight_up_epochs]
+
+    # Concatenate the epochs, this step automatically applies baseline correction
+    dataset_epochs = mne.concatenate_epochs(epochs_list)
+    print(f"Concat_epochs shape is {dataset_epochs.get_data().shape}. No of events, no of channels, no of data points.")
+
+    # Now we extract the data to a Numpy array of the format: (n_epochs, n_channels, n_times)
+    highlight_down_epochs_ndarray = dataset_epochs.get_data(item='highlight_down')
+    highlight_up_epochs_ndarray = dataset_epochs.get_data(item='highlight_up')
+    dataset_ndarray = np.concatenate((highlight_down_epochs_ndarray, highlight_up_epochs_ndarray), axis=0)
+
+    eeg_labels = np.array(highlight_down_epochs_ndarray.shape[0] * [0] + highlight_up_epochs_ndarray.shape[0] * [1])
+
+    return dataset_epochs, dataset_ndarray, eeg_labels
+
+
+def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_select=20):
+    """
+    Function that gets concatenated epochs and numpy array version of epochs, and eeg labels, and
+    applies k-fold LDA algorithm while also doing a sequantial feature reduction at every k-fold.
+    It returns to all the trained LDAs and the scores."""
+
+    scores = []
+    k_ldas = []
+    #Determining indices of the 5 different training and testing datasets
+    kf = KFold(n_splits=5, shuffle=True, random_state = 1234)
+    for train_index, test_index in kf.split(concat_epochs_ndarray):
+        # Data (ndarrays and MNE epochs) are split into training and testing datasets
+        X_train, X_test = concat_epochs_ndarray[train_index], concat_epochs_ndarray[test_index]
+        y_train, y_test = eeg_labels[train_index], eeg_labels[test_index]
+        X_train_epochs, X_test_epochs = concat_epochs[train_index], concat_epochs[test_index]
+
+        # Extract the features
+        X_train, csp = process_features(X_train, X_train_epochs, y_train)
+        X_test, _ = process_features(X_test, X_test_epochs, y_test, csp)
+
+        # Initialize and train the LDA, calculate best features, test the data
+        lda = LinearDiscriminantAnalysis()
+        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select, direction="backward").fit(X_train, y_train).support_
+        fitted_lda = lda.fit(X_train[:,selected_feature_idx], y_train)
+        k_ldas.append([fitted_lda, selected_feature_idx,  X_train, y_train, X_test, y_test ])
+        score = fitted_lda.score(X_test[:,selected_feature_idx], y_test)
+        scores.append(score)
+
+    print(f'Max score: {np.max(scores)}, std: {np.std(scores)}.')
+
+    return k_ldas, scores, selected_feature_idx
+
