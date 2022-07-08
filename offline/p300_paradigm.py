@@ -21,8 +21,8 @@ with open(r'./config_short_blue-green.pkl', 'rb') as file:
 GREY = (103, 103, 110)
 WHITE = (255, 255, 255)
 
-TARGET = (255, 0, 0)
-HIGHLIGHT = (255, 255, 0)
+TARGET = params['target_color']
+HIGHLIGHT = params['highlight_color']
 
 WINDOW_WIDTH = 600 # 600
 WINDOW_HEIGHT = 600 # 600
