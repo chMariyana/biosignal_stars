@@ -54,9 +54,10 @@ def load_xdf_data(file, with_stim=False):
     sfreq = float(data_stream['info']['nominal_srate'][0])
 
     # Get the data --> only the first 8 rows are for the electrodes
-    data = data_stream["time_series"].T[:8]
+    data = data_stream["time_series"].T[:14]
     # Set the channel names
-    ch_names = ['Fz', 'T3', 'Cz', 'T4', 'Pz', 'Oz', 'C3', 'C4']  # Our config
+    ch_names =['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
+    #['Fz', 'T3', 'Cz', 'T4', 'Pz', 'Oz', 'C3', 'C4']  # Our config
 
     # Define the channel types
     ch_types = ['eeg'] * len(ch_names)
