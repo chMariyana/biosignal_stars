@@ -70,7 +70,7 @@ epochs_highlights = mne.Epochs(raw_car,
                     event_repeated='drop')
 
 # Get the two classes of epochs that involves the P300 response and not
-sub_epochs = epochs['highlight_down', 'highlight_up']
+sub_epochs = epochs_highlights['highlight_down', 'highlight_up']
 
 # After this we should exclude bad epochs. Click on the epochs in the window to drop them. Close the window to save.
 sub_epochs.plot(scalings='auto', butterfly=True)
