@@ -21,9 +21,6 @@ with open(os.path.join(os.path.curdir, 'configs', 'config_long_red-yellow.json')
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-TARGET = params['target_color']
-HIGHLIGHT = params['highlight_color']
-
 # Initialise Pygame
 pg.init()
 
@@ -106,9 +103,9 @@ class Paradigm(object):
         colour = WHITE  
 
         if highlighted:
-            colour = HIGHLIGHT
+            colour = params['highlight_color']
         elif is_target:
-            colour = TARGET
+            colour = params['target_color']
 
         # Draw the arrows.
         for y in range(self.lines):
