@@ -18,7 +18,7 @@ with open(r'configs/config_long_red-yellow.txt', 'rb') as file:
     params = pickle.load(file)
 
 # Define custom colors
-GREY = (0, 0, 0)
+BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 TARGET = params['target_color']
@@ -59,7 +59,7 @@ class Paradigm(object):
 
         # Surface for the arrows to be shown in.
         self.arrow_surf = pg.Surface((self.window_width, self.window_height))
-        self.arrow_surf.fill(GREY)
+        self.arrow_surf.fill(BLACK)
         self.arrow_surf_rect = self.arrow_surf.get_rect()
 
         # Define the stimuli.
@@ -82,10 +82,10 @@ class Paradigm(object):
 
     def clear_screen(self):
         # Reset the arrow surface.
-        self.arrow_surf.fill(GREY)
+        self.arrow_surf.fill(BLACK)
 
         # Clear the screen.
-        self.window.fill(GREY)
+        self.window.fill(BLACK)
 
         # Update the screen
         pg.display.flip()
@@ -488,7 +488,7 @@ if __name__=="__main__":
     # Create a Pygame window
     window = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pg.display.set_caption('P300 Paradigm')
-    window.fill(GREY)
+    window.fill(BLACK)
 
     # Initialise the Paradigm object to manage the functions and variables.
     paradigm = Paradigm(window, params, targets)
