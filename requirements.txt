@@ -1,0 +1,34 @@
+mne==1.0.3
+pip-chill==1.0.1
+pygame==2.1.2
+pylsl==1.16.0
+pyxdf==1.16.3
+seaborn==0.11.2
+sklearn==0.0
+# appdirs==1.4.4 # Installed as dependency for pooch
+# certifi==2022.6.15 # Installed as dependency for requests
+# charset-normalizer==2.1.0 # Installed as dependency for requests
+# cycler==0.11.0 # Installed as dependency for matplotlib
+# decorator==5.1.1 # Installed as dependency for mne
+# fonttools==4.34.4 # Installed as dependency for matplotlib
+# idna==3.3 # Installed as dependency for requests
+# jinja2==3.1.2 # Installed as dependency for mne
+# joblib==1.1.0 # Installed as dependency for scikit-learn
+# kiwisolver==1.4.3 # Installed as dependency for matplotlib
+# markupsafe==2.1.1 # Installed as dependency for jinja2
+# matplotlib==3.5.2 # Installed as dependency for mne, seaborn
+# numpy==1.23.0 # Installed as dependency for matplotlib, scipy, scikit-learn, pyxdf, pandas, mne, seaborn
+# packaging==21.3 # Installed as dependency for mne, matplotlib, pooch
+# pandas==1.4.3 # Installed as dependency for seaborn
+# pillow==9.2.0 # Installed as dependency for matplotlib
+# pooch==1.6.0 # Installed as dependency for mne
+# pyparsing==3.0.9 # Installed as dependency for matplotlib, packaging
+# python-dateutil==2.8.2 # Installed as dependency for pandas, matplotlib
+# pytz==2022.1 # Installed as dependency for pandas
+# requests==2.28.1 # Installed as dependency for pooch
+# scikit-learn==1.1.1 # Installed as dependency for sklearn
+# scipy==1.8.1 # Installed as dependency for scikit-learn, seaborn, mne
+# six==1.16.0 # Installed as dependency for python-dateutil
+# threadpoolctl==3.1.0 # Installed as dependency for scikit-learn
+# tqdm==4.64.0 # Installed as dependency for mne
+# urllib3==1.26.10 # Installed as dependency for requests
