@@ -1,0 +1,20 @@
+{
+    "highlight_length": 0.15,
+    "target_length": 2.5,
+    "baseline_length": 2,
+    "delay_baseline_arrows": 0.1,
+    "inter_highlight_length": 0.15,
+    "inter_block_length": 3,
+    "inter_trial_length": 0.1,
+    "num_highlights": 15,
+    "target_color": [
+        0,
+        0,
+        255
+    ],
+    "highlight_color": [
+        0,
+        255,
+        0
+    ]
+}

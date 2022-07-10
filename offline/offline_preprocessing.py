@@ -15,6 +15,7 @@ import os
 import glob
 import mne
 import pickle
+import json
 from utils import load_xdf_data
 
 
@@ -22,8 +23,8 @@ SIGNAL_DURATION = .650
 
 # %%
 # Load the configurations of the paradigm
-with open(os.path.join(os.path.curdir, 'configs', 'config_short_red-yellow.txt'), 'rb') as file:
-    params = pickle.load(file)
+with open(os.path.join(os.path.curdir, 'configs', 'config_short_red-yellow.json'), 'r') as file:
+    params = json.load(file)
 
 file = os.path.join(os.path.curdir, '..', 'raw', 'trial_data.xdf')
 
