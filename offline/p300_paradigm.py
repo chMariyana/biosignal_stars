@@ -14,7 +14,7 @@ import numpy as np
 from pylsl import local_clock, StreamInfo, StreamOutlet
 
 # Load the configurations of the paradigm
-with open(r'./config_long_red-yellow.pkl', 'rb') as file:
+with open(r'configs/config_long_red-yellow.txt', 'rb') as file:
     params = pickle.load(file)
 
 # Define custom colors

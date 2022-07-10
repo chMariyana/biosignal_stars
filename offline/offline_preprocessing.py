@@ -18,13 +18,13 @@ from utils import load_xdf_data
 
 
 SIGNAL_DURATION = .650
+
 # %%
 # Load the configurations of the paradigm
-with open(r'./config_short_blue-green.pkl', 'rb') as file:
+with open(r'configs/config_short_red-yellow.txt', 'rb') as file:
     params = pickle.load(file)
 
-# file = r"r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\\raw\\**\\*.xdf"
-file = r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\raw\*.xdf'
+file = r'..\data\raw\trial_data.xdf'
 
 epochs_list = []
 for trial_no, trial in enumerate(sorted(glob.glob(file))):
@@ -79,6 +79,6 @@ sub_epochs.plot(scalings='auto', butterfly=True)
 sub_epochs.plot_psd()
 
 # %%
-with open(r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\sub_epochs\sub_epochs_trial.pkl', 'wb') as file:
+with open(r'..\data\sub_epochs\sub_epochs_trial.pkl', 'wb') as file:
     # Save the sub-epochs for signal processing
     pickle.dump(sub_epochs, file)
