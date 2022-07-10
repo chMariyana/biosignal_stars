@@ -20,7 +20,7 @@ from utils import process_features, epoching, k_fold_LDA
 
 # %%
 # Alternatively load the concatenated data
-file = r'C:\Users\AYCA\PycharmProjects\biosignal_stars\data\sub_epochs\sub_epochs_trial.pkl'
+file = r'..\data\sub_epochs\sub_epochs_trial.pkl'
 with open(file, 'rb') as handle:
     sub_epochs = pickle.load(handle)
 
