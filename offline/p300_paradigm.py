@@ -21,15 +21,8 @@ with open(os.path.join(os.path.curdir, 'configs', 'config_long_red-yellow.json')
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Initialise Pygame
-pg.init()
-
-# Set the window size parameters
-sc = pg.display.Info()
-WIDTH = sc.current_w
-HEIGHT = sc.current_h
-WINDOW_WIDTH = WIDTH # 600
-WINDOW_HEIGHT = HEIGHT # 600
+WINDOW_WIDTH = 600 # 600
+WINDOW_HEIGHT = 600 # 600
 
 class Paradigm(object):
 
@@ -479,10 +472,14 @@ if __name__=="__main__":
     # Define the targets that are going to be shown
     targets = ['left', 'right', 'up', 'down']
 
+    # Initialise Pygame
+    pg.init()
 
+    # Get display info to set the window size.
+    sc = pg.display.Info()
 
     # Create a Pygame window
-    window = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    window = pg.display.set_mode((sc.current_w, sc.current_h))
     pg.display.set_caption('P300 Paradigm')
     window.fill(BLACK)
 
