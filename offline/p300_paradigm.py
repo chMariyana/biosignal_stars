@@ -323,7 +323,6 @@ class Paradigm(object):
                 self.marker_stream.push_sample(
                     [f'baseline_for_trial_{trial_num}-{local_clock()}']
                 )
-                print(params['baseline_length'])
                 paradigm.draw_baseline_fix(delay=params['baseline_length'])
                 paradigm.clear_screen()
 
