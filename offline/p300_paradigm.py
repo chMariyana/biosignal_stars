@@ -5,7 +5,6 @@
 
 import pygame
 import random
-import time
 import pickle
 
 import pygame as pg
