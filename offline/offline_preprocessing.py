@@ -11,6 +11,7 @@ Author:
 
 # !%matplotlib qt
 
+import os
 import glob
 import mne
 import pickle
@@ -21,10 +22,10 @@ SIGNAL_DURATION = .650
 
 # %%
 # Load the configurations of the paradigm
-with open(r'configs/config_short_red-yellow.txt', 'rb') as file:
+with open(os.path.join(os.path.curdir, 'configs', 'config_short_red-yellow.txt'), 'rb') as file:
     params = pickle.load(file)
 
-file = r'..\data\raw\trial_data.xdf'
+file = os.path.join(os.path.curdir, '..', 'raw', 'trial_data.xdf')
 
 epochs_list = []
 for trial_no, trial in enumerate(sorted(glob.glob(file))):
@@ -79,6 +80,6 @@ sub_epochs.plot(scalings='auto', butterfly=True)
 sub_epochs.plot_psd()
 
 # %%
-with open(r'..\data\sub_epochs\sub_epochs_trial.pkl', 'wb') as file:
+with open(os.path.join(os.path.curdir, '..', 'data', 'sub_epochs', 'sub_epochs_trial.pkl'), 'wb') as file:
     # Save the sub-epochs for signal processing
     pickle.dump(sub_epochs, file)

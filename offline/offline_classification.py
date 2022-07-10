@@ -13,6 +13,7 @@ Author:
 import numpy as np
 
 import pickle
+import os
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
@@ -20,7 +21,7 @@ from utils import process_features, epoching, k_fold_LDA
 
 # %%
 # Alternatively load the concatenated data
-file = r'..\data\sub_epochs\sub_epochs_trial.pkl'
+file = os.path.join(os.path.curdir, '..', 'data', 'sub_epochs', 'sub_epochs_trial.pkl')
 with open(file, 'rb') as handle:
     sub_epochs = pickle.load(handle)
 

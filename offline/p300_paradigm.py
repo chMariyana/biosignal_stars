@@ -6,6 +6,7 @@
 import pygame
 import random
 import pickle
+import os
 
 import pygame as pg
 import numpy as np
@@ -13,7 +14,7 @@ import numpy as np
 from pylsl import local_clock, StreamInfo, StreamOutlet
 
 # Load the configurations of the paradigm
-with open(r'configs/config_long_red-yellow.txt', 'rb') as file:
+with open(os.path.join(os.path.curdir, 'configs', 'config_long_red-yellow.txt'), 'rb') as file:
     params = pickle.load(file)
 
 # Define custom colors
