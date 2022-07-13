@@ -18,15 +18,18 @@ import pickle
 import json
 from utils import load_xdf_data
 
+PROJECT_DIR = os.path.abspath(os.path.curdir)
+OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline/configs')
+DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 
 SIGNAL_DURATION = .650
 
 # %%
 # Load the configurations of the paradigm
-with open(os.path.join(os.path.curdir, 'configs', 'config_short_red-yellow.json'), 'r') as file:
-    params = json.load(file)
+with open(os.path.join(OFFLINE_CONFIG_DIR, 'config_short_red-yellow.json'), 'r') as opened_file:
+    params = json.load(opened_file)
 
-file = os.path.join(os.path.curdir, '..', 'raw', 'trial_data.xdf')
+file = os.path.join(DATA_DIR, 'raw', 'trial_data.xdf')
 
 epochs_list = []
 for trial_no, trial in enumerate(sorted(glob.glob(file))):
@@ -46,13 +49,14 @@ for trial_no, trial in enumerate(sorted(glob.glob(file))):
                            params['inter_highlight_length'] * (params['num_highlights'] - 1)
     tmin, tmax = -params['baseline_length'], total_trial_duration
     epochs_list.append(mne.Epochs(raw_car,
-                        events=event_arr,
-                        event_id=event_id,
-                        tmin=tmin,
-                        tmax=tmax,
-                        baseline=(-params['baseline_length'], 0), # We apply baseline correction here !!!!!!!!!!!!!
-                        preload=True,
-                        event_repeated='drop'))
+                                  events=event_arr,
+                                  event_id=event_id,
+                                  tmin=tmin,
+                                  tmax=tmax,
+                                  baseline=(-params['baseline_length'], 0),
+                                  # We apply baseline correction here !!!!!!!!!!!!!
+                                  preload=True,
+                                  event_repeated='drop'))
 
 # Concatenate the epochs
 epochs = mne.concatenate_epochs(epochs_list)
@@ -61,15 +65,15 @@ epochs = mne.concatenate_epochs(epochs_list)
 sub_epochs_trials = epochs['trial_begin']
 
 # Now we epoch the trials to get highlights
-tmin, tmax = 0, SIGNAL_DURATION # exp_durations['highlight_length']
+tmin, tmax = 0, SIGNAL_DURATION  # exp_durations['highlight_length']
 epochs_highlights = mne.Epochs(raw_car,
-                    events=event_arr,
-                    event_id=event_id,
-                    tmin=tmin,
-                    tmax=tmax,
-                    baseline=None, # we don't apply baseline correction here !!!!!!!!!!!!!
-                    preload=True,
-                    event_repeated='drop')
+                               events=event_arr,
+                               event_id=event_id,
+                               tmin=tmin,
+                               tmax=tmax,
+                               baseline=None,  # we don't apply baseline correction here !!!!!!!!!!!!!
+                               preload=True,
+                               event_repeated='drop')
 
 # Get the two classes of epochs that involves the P300 response and not
 sub_epochs = epochs_highlights['highlight_down', 'highlight_up']
@@ -81,6 +85,6 @@ sub_epochs.plot(scalings='auto', butterfly=True)
 sub_epochs.plot_psd()
 
 # %%
-with open(os.path.join(os.path.curdir, '..', 'data', 'sub_epochs', 'sub_epochs_trial.pkl'), 'wb') as file:
+with open(os.path.join(DATA_DIR, 'sub_epochs', 'sub_epochs_trial.pkl'), 'wb') as opened_file:
     # Save the sub-epochs for signal processing
-    pickle.dump(sub_epochs, file)
+    pickle.dump(sub_epochs, opened_file)
