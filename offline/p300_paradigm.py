@@ -86,11 +86,6 @@ class Paradigm(object):
         return letter_surface
 
     def draw_arrows(self, target, highlighted, is_target, display_time=None):
-        # TODO: Add cues input which determines which arrows to show.
-        # Define the arrows.
-        # TODO: Define a better grid.
-        # TODO: Implement a resting cue.
-
         colour = WHITE  
 
         if highlighted:
