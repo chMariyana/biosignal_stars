@@ -1,4 +1,3 @@
-
 import numpy as np
 
 import mne
@@ -16,7 +15,6 @@ from sklearn.feature_selection import SequentialFeatureSelector
 
 
 def load_xdf_data(file, with_stim=False):
-
     # Read the XDF file
     streams, header = pyxdf.load_xdf(file)
 
@@ -56,8 +54,8 @@ def load_xdf_data(file, with_stim=False):
     # Get the data --> only the first 8 rows are for the electrodes
     data = data_stream["time_series"].T[:14]
     # Set the channel names
-    ch_names =['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
-    #['Fz', 'T3', 'Cz', 'T4', 'Pz', 'Oz', 'C3', 'C4']  # Our config
+    ch_names = ['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
+    # ['Fz', 'T3', 'Cz', 'T4', 'Pz', 'Oz', 'C3', 'C4']  # Our config
 
     # Define the channel types
     ch_types = ['eeg'] * len(ch_names)
@@ -298,8 +296,8 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
     scores = []
     k_ldas = []
-    #Determining indices of the 5 different training and testing datasets
-    kf = KFold(n_splits=5, shuffle=True, random_state = 1234)
+    # Determining indices of the 5 different training and testing datasets
+    kf = KFold(n_splits=5, shuffle=True, random_state=1234)
     for train_index, test_index in kf.split(concat_epochs_ndarray):
         # Data (ndarrays and MNE epochs) are split into training and testing datasets
         X_train, X_test = concat_epochs_ndarray[train_index], concat_epochs_ndarray[test_index]
@@ -312,13 +310,44 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
         # Initialize and train the LDA, calculate best features, test the data
         lda = LinearDiscriminantAnalysis()
-        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select, direction="backward").fit(X_train, y_train).support_
-        fitted_lda = lda.fit(X_train[:,selected_feature_idx], y_train)
-        k_ldas.append([fitted_lda, selected_feature_idx,  X_train, y_train, X_test, y_test ])
-        score = fitted_lda.score(X_test[:,selected_feature_idx], y_test)
+        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select,
+                                                         direction="backward").fit(X_train, y_train).support_
+        fitted_lda = lda.fit(X_train[:, selected_feature_idx], y_train)
+        k_ldas.append([fitted_lda, selected_feature_idx, X_train, y_train, X_test, y_test])
+        score = fitted_lda.score(X_test[:, selected_feature_idx], y_test)
         scores.append(score)
 
     print(f'Max score: {np.max(scores)}, std: {np.std(scores)}.')
 
     return k_ldas, scores, selected_feature_idx
 
+
+def get_x_y_data(eeg_data, event_arr: np.ndarray, exp_config: dict):
+    all_targets = {'target_down': 7,
+                   'target_left': 8,
+                   'target_right': 9,
+                   'target_up': 10}
+    target_epoch_length =\
+        exp_config['target_length'] +\
+        (exp_config['highlight_length'] + exp_config['inter_highlight_length']) * exp_config['num_highlights']
+
+    y = []
+    X = None
+    tmin = exp_config['baseline_length']
+    tmax = target_epoch_length
+    for (target_name, target_id) in all_targets.items():
+        epochs_target_ = mne.Epochs(eeg_data,
+                                    events=event_arr,
+                                    event_id={target_name: target_id},
+                                    tmin=tmin,
+                                    tmax=tmax,
+                                    baseline=(None, 0),
+                                    preload=True)
+        n_epochs = epochs_target_.get_data().shape[0]
+        y.extend([target_name] * n_epochs)
+        if X is None:
+            X = epochs_target_
+        else:
+            X = np.concatenate([X, epochs_target_])
+
+        return X, y
