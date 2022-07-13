@@ -63,8 +63,6 @@ class Paradigm(object):
         self.columns = len(self.grid[0])
         self.column_width = self.window_width / self.columns
         self.lines_height = self.window_height / self.lines
-        self.horizontal_margin = self.column_width / 4
-        self.vertical_margin = self.lines_height / 4
 
         # Define the fonts.
         self.arrow_font = pygame.font.SysFont("None", 190)
@@ -109,9 +107,13 @@ class Paradigm(object):
                 else:
                     letter_surface = self.get_letter_surface(self.grid[y][x],
                                                             colour=WHITE)
-                self.window.blit(letter_surface,
-                        (self.column_width * x + self.horizontal_margin, 
-                        self.lines_height * y + self.vertical_margin))
+
+                # Display the surface in the center of its column and row.
+                column_center = self.column_width * x + (self.column_width / 2)
+                row_center = self.lines_height * y + (self.lines_height / 2)
+                letter_surface_rect = letter_surface.get_rect()
+                letter_surface_rect.center = (column_center, row_center)
+                self.window.blit(letter_surface, letter_surface_rect)
 
         # Update the screen
         pg.display.flip()
