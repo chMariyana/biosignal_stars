@@ -12,6 +12,7 @@ from mne.time_frequency import psd_welch
 from sklearn.model_selection import KFold
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.feature_selection import SequentialFeatureSelector
+from global_configs import globals as GLOB
 
 
 def load_xdf_data(file, with_stim=False):
@@ -322,32 +323,106 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
     return k_ldas, scores, selected_feature_idx
 
 
-def get_x_y_data(eeg_data, event_arr: np.ndarray, exp_config: dict):
-    all_targets = {'target_down': 7,
-                   'target_left': 8,
-                   'target_right': 9,
-                   'target_up': 10}
-    target_epoch_length =\
-        exp_config['target_length'] +\
-        (exp_config['highlight_length'] + exp_config['inter_highlight_length']) * exp_config['num_highlights']
+def get_epochs_and_targets(eeg_data, event_arr: np.ndarray, exp_config: dict):
+    """
+    :param eeg_data:
+    :param event_arr:
+    :param exp_config:
+    :return:
+    """
+    target_epoch_length = exp_config[GLOB.TARGET_LENGTH] + \
+        (exp_config[GLOB.HIGHLIGHT_LENGTH] + exp_config[GLOB.INTER_HIGHLIGHT_LENGTH]) * exp_config[GLOB.NUM_HIGHLIGHTS]
 
-    y = []
-    X = None
-    tmin = exp_config['baseline_length']
-    tmax = target_epoch_length
-    for (target_name, target_id) in all_targets.items():
+    targets_all = []
+    epochs_all = None
+    t_min = - exp_config[GLOB.BASELINE_LENGTH]
+    t_max = target_epoch_length
+
+    for (target_name, target_id) in GLOB.ALL_TARGETS.items():
         epochs_target_ = mne.Epochs(eeg_data,
                                     events=event_arr,
                                     event_id={target_name: target_id},
-                                    tmin=tmin,
-                                    tmax=tmax,
+                                    tmin=t_min,
+                                    tmax=t_max,
                                     baseline=(None, 0),
                                     preload=True)
         n_epochs = epochs_target_.get_data().shape[0]
-        y.extend([target_name] * n_epochs)
-        if X is None:
-            X = epochs_target_
+        targets_all.extend([target_name] * n_epochs)
+        if epochs_all is None:
+            epochs_all = epochs_target_
         else:
-            X = np.concatenate([X, epochs_target_])
+            epochs_all = mne.concatenate_epochs([epochs_all, epochs_target_])
 
-        return X, y
+        return epochs_all, targets_all
+
+def modify_events( event_arr: np.ndarray, event_id: dict):
+
+    events_seq = event_arr[:, 2]
+
+    target_events_seq = np.zeros_like(events_seq)
+
+    highlight_inds = (events_seq > 1) & (events_seq < 6)
+    target_start_inds = (events_seq > 6) & (events_seq < 11)
+    target_events_seq[target_start_inds] = events_seq[target_start_inds]
+
+    curr_target = 0
+    for i in range(target_events_seq.shape[0]):
+        if target_events_seq[i] == 0:
+            target_events_seq[i] = curr_target
+        else:
+            curr_target = target_events_seq[i]
+    diff = (target_events_seq - events_seq)
+    targets_shown = (diff == 5)
+    event_arr_orig = event_arr.copy()
+    event_arr[highlight_inds, 2] = 99
+    event_arr[targets_shown, 2] = 100
+
+    event_id_orig = event_id.copy()
+    event_id.update({'target_true': 100,
+                     'target_false': 99})
+
+    return event_arr, event_id
+
+
+def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict):
+    """
+    Create dataset and labels as nd arrays based on experiment configs
+
+    :param eeg_data:
+    :param event_arr:
+    :param event_id:
+    :return:
+    """
+    event_arr, event_id = modify_events(event_arr, event_id)
+
+    epochs_highlights_notargets = mne.Epochs(eeg_data,
+                                             events=event_arr,
+                                             event_id={'highlight_target_false': 99},
+                                             tmin=-.1,
+                                             tmax=.65,
+                                             baseline=None,
+                                             preload=True)
+
+    epochs_highlights_targets = mne.Epochs(eeg_data,
+                                           events=event_arr,
+                                           event_id={'highlight_target_true': 100},
+                                           tmin=-.1,
+                                           tmax=.65,
+                                           baseline=None,
+                                           preload=True)
+    return epochs_highlights_targets, epochs_highlights_notargets
+
+
+def get_labeled_dataset(epochs_highlights_targets, epochs_highlights_notargets):
+    """
+
+    :param epochs_highlights_targets:
+    :param epochs_highlights_notargets:
+    :return:
+    """
+
+    x_all = np.concatenate([epochs_highlights_targets, epochs_highlights_notargets])
+    y_all = epochs_highlights_notargets.events.shape[0] * [0] + epochs_highlights_targets.events.shape[0] * [1]
+
+    return x_all, y_all
+
