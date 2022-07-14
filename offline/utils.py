@@ -331,7 +331,8 @@ def get_epochs_and_targets(eeg_data, event_arr: np.ndarray, exp_config: dict):
     :return:
     """
     target_epoch_length = exp_config[GLOB.TARGET_LENGTH] + \
-        (exp_config[GLOB.HIGHLIGHT_LENGTH] + exp_config[GLOB.INTER_HIGHLIGHT_LENGTH]) * exp_config[GLOB.NUM_HIGHLIGHTS]
+                          (exp_config[GLOB.HIGHLIGHT_LENGTH] + exp_config[GLOB.INTER_HIGHLIGHT_LENGTH]) * exp_config[
+                              GLOB.NUM_HIGHLIGHTS]
 
     targets_all = []
     epochs_all = None
@@ -355,8 +356,8 @@ def get_epochs_and_targets(eeg_data, event_arr: np.ndarray, exp_config: dict):
 
         return epochs_all, targets_all
 
-def modify_events( event_arr: np.ndarray, event_id: dict):
 
+def modify_events(event_arr: np.ndarray, event_id: dict):
     events_seq = event_arr[:, 2]
 
     target_events_seq = np.zeros_like(events_seq)
@@ -384,7 +385,7 @@ def modify_events( event_arr: np.ndarray, event_id: dict):
     return event_arr, event_id
 
 
-def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict):
+def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict, preprocess_config: dict):
     """
     Create dataset and labels as nd arrays based on experiment configs
 
@@ -397,17 +398,17 @@ def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: 
 
     epochs_highlights_notargets = mne.Epochs(eeg_data,
                                              events=event_arr,
-                                             event_id={'highlight_target_false': 99},
-                                             tmin=-.1,
-                                             tmax=.65,
+                                             event_id={GLOB.HIGHLIGHT_TARGET_FALSE: 99},
+                                             tmin=preprocess_config['signal_duration_max'],
+                                             tmax=preprocess_config['signal_duration_max'],
                                              baseline=None,
                                              preload=True)
 
     epochs_highlights_targets = mne.Epochs(eeg_data,
                                            events=event_arr,
-                                           event_id={'highlight_target_true': 100},
-                                           tmin=-.1,
-                                           tmax=.65,
+                                           event_id={GLOB.HIGHLIGHT_TARGET_TRUE: 100},
+                                           tmin=preprocess_config['signal_duration_max'],
+                                           tmax=preprocess_config['signal_duration_max'],
                                            baseline=None,
                                            preload=True)
     return epochs_highlights_targets, epochs_highlights_notargets
@@ -425,4 +426,3 @@ def get_labeled_dataset(epochs_highlights_targets, epochs_highlights_notargets):
     y_all = epochs_highlights_notargets.events.shape[0] * [0] + epochs_highlights_targets.events.shape[0] * [1]
 
     return x_all, y_all
-

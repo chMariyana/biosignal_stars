@@ -4,5 +4,6 @@ preprocess:
   min_pass_freq: .1
   max_pass_freq: 10
   apply_referencing: 'average'
-  signal_duration: .65
+  signal_duration_min: 0
+  signal_duration_max: .65
 

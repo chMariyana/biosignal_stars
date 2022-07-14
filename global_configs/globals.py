@@ -22,6 +22,8 @@ TARGET_DOWN = 'target_down'
 TARGET_LEFT = 'target_left'
 TARGET_RIGHT = 'target_right'
 TARGET_UP = 'target_up'
+HIGHLIGHT_TARGET_FALSE = 'highlight_target_false'
+HIGHLIGHT_TARGET_TRUE = 'highlight_target_true'
 
 ALL_TARGETS = {TARGET_DOWN: 7,
                TARGET_LEFT: 8,

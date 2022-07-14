@@ -65,8 +65,8 @@ def preprocess(global_config_dict: dict):
                                       preload=True,
                                       event_repeated='drop'))
         # get epochs for highlights based on target shown
-        epochs_highlights_targets, epochs_highlights_notargets = get_highlight_trials_class_based(raw_car, event_arr,
-                                                                                                  event_id)
+        epochs_highlights_targets, epochs_highlights_notargets =\
+            get_highlight_trials_class_based(raw_car, event_arr, event_id, preprocess_config)
         # get data as nd array and label vector
         x_all, y_all = get_labeled_dataset(epochs_highlights_targets, epochs_highlights_notargets)
         # create name for the current output file and save
