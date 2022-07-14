@@ -1,0 +1,8 @@
+experiment_file:  'config_short_red-yellow.json'
+preprocess:
+  raw_data_dir: 'default'
+  min_pass_freq: .1
+  max_pass_freq: 10
+  apply_referencing: 'average'
+  signal_duration: .65
+
