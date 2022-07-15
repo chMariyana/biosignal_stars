@@ -33,7 +33,7 @@ def load_xdf_data(file, with_stim=False):
             marker_streams.append(stream)
             print(f'{stream_name} --> marker stream')
 
-        elif stream_type in ('eeg', 'data'):
+        elif 'signal' in stream_type:
             data_stream.append(stream)
             print(f'{stream_name} --> data stream')
 
@@ -113,7 +113,7 @@ def load_xdf_data(file, with_stim=False):
                 time_offset = float(stream['footer']['info']['clock_offsets'][0]['offset'][1]['value'][0])
 
             # Convert all raw timestamps to the Unix format.
-            raw_time = raw_time - time_offset
+            # raw_time = raw_time - time_offset
             # Get the smallest time stamp of both the data and marker stream
             offset = min(cue_times[0], raw_time[0])
             # Convert the corrected time stamps into indices, which are are basically the index
@@ -392,7 +392,8 @@ def modify_events(event_arr: np.ndarray, event_id: dict):
     return event_arr, event_id
 
 
-def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict, preprocess_config: dict):
+def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict, preprocess_config: dict,
+                                     modify_evens: bool =True):
     """
     Create dataset and labels as nd arrays based on experiment configs
 
@@ -401,7 +402,8 @@ def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: 
     :param event_id:
     :return:
     """
-    event_arr, event_id = modify_events(event_arr, event_id)
+    if modify_evens:
+        event_arr, event_id = modify_events(event_arr, event_id)
 
     epochs_highlights_notargets = mne.Epochs(eeg_data,
                                              events=event_arr,
