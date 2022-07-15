@@ -28,4 +28,5 @@ HIGHLIGHT_TARGET_TRUE = 'highlight_target_true'
 ALL_TARGETS = {TARGET_DOWN: 7,
                TARGET_LEFT: 8,
                TARGET_RIGHT: 9,
-               TARGET_UP: 10}
+               TARGET_UP: 10
+               }
