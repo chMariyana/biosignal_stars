@@ -359,8 +359,11 @@ def get_epochs_and_targets(eeg_data, event_arr: np.ndarray, exp_config: dict):
 
 def modify_events(event_arr: np.ndarray, event_id: dict):
     """
+    A function to modify the event array so that we have labels for target and non target highlights,
+    currently used: {GLOB.HIGHLIGHT_TARGET_TRUE: 100,
+                     GLOB.HIGHLIGHT_TARGET_FALSE: 99}
 
-    :param event_arr:
+    :param event_arr: ndarray
     :param event_id:
     :return:
     """
