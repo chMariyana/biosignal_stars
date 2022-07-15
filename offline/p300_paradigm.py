@@ -5,18 +5,21 @@
 
 import pygame
 import random
-import time
+import json
+import os
 
 import pygame as pg
 import numpy as np
 
 from pylsl import local_clock, StreamInfo, StreamOutlet
 
+# Load the configurations of the paradigm
+with open(os.path.join(os.path.curdir, 'configs', 'config_long_red-yellow.json'), 'r') as file:
+    params = json.load(file)
+
 # Define custom colors
-GREY = (103, 103, 110)
+BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
 
 WINDOW_WIDTH = 600 # 600
 WINDOW_HEIGHT = 600 # 600
@@ -46,7 +49,7 @@ class Paradigm(object):
 
         # Surface for the arrows to be shown in.
         self.arrow_surf = pg.Surface((self.window_width, self.window_height))
-        self.arrow_surf.fill(GREY)
+        self.arrow_surf.fill(BLACK)
         self.arrow_surf_rect = self.arrow_surf.get_rect()
 
         # Define the stimuli.
@@ -60,8 +63,6 @@ class Paradigm(object):
         self.columns = len(self.grid[0])
         self.column_width = self.window_width / self.columns
         self.lines_height = self.window_height / self.lines
-        self.horizontal_margin = self.column_width / 4
-        self.vertical_margin = self.lines_height / 4
 
         # Define the fonts.
         self.arrow_font = pygame.font.SysFont("None", 190)
@@ -69,10 +70,10 @@ class Paradigm(object):
 
     def clear_screen(self):
         # Reset the arrow surface.
-        self.arrow_surf.fill(GREY)
+        self.arrow_surf.fill(BLACK)
 
         # Clear the screen.
-        self.window.fill(GREY)
+        self.window.fill(BLACK)
 
         # Update the screen
         pg.display.flip()
@@ -85,17 +86,12 @@ class Paradigm(object):
         return letter_surface
 
     def draw_arrows(self, target, highlighted, is_target, display_time=None):
-        # TODO: Add cues input which determines which arrows to show.
-        # Define the arrows.
-        # TODO: Define a better grid.
-        # TODO: Implement a resting cue.
-
         colour = WHITE  
 
         if highlighted:
-            colour = YELLOW
+            colour = params['highlight_color']
         elif is_target:
-            colour = RED
+            colour = params['target_color']
 
         # Draw the arrows.
         for y in range(self.lines):
@@ -106,9 +102,13 @@ class Paradigm(object):
                 else:
                     letter_surface = self.get_letter_surface(self.grid[y][x],
                                                             colour=WHITE)
-                self.window.blit(letter_surface,
-                        (self.column_width * x + self.horizontal_margin, 
-                        self.lines_height * y + self.vertical_margin))
+
+                # Display the surface in the center of its column and row.
+                column_center = self.column_width * x + (self.column_width / 2)
+                row_center = self.lines_height * y + (self.lines_height / 2)
+                letter_surface_rect = letter_surface.get_rect()
+                letter_surface_rect.center = (column_center, row_center)
+                self.window.blit(letter_surface, letter_surface_rect)
 
         # Update the screen
         pg.display.flip()
@@ -310,11 +310,11 @@ class Paradigm(object):
                 self.marker_stream.push_sample(
                     [f'baseline_for_trial_{trial_num}-{local_clock()}']
                 )
-                paradigm.draw_baseline_fix(delay=exp_durations['baseline_length'])
+                paradigm.draw_baseline_fix(delay=params['baseline_length'])
                 paradigm.clear_screen()
 
                 # Add a delay between the baseline and drawing the arrows.
-                pg.time.delay(int(exp_durations['delay_baseline_arrows'] * 1000))
+                pg.time.delay(int(params['delay_baseline_arrows'] * 1000))
 
                 # Show the targets.
                 paradigm.draw_arrows(target=None, highlighted=False, is_target=False)
@@ -335,14 +335,14 @@ class Paradigm(object):
                 paradigm.draw_arrows(target_position,
                                      highlighted=False,
                                      is_target=True,
-                                     display_time=exp_durations['target_length'])
+                                     display_time=params['target_length'])
 
                 # Now do all the highlighting of arrows at random.
                 # We want to guarantee that the target is flashed.
                 # Thus we take the possible targets as a basis, and add more highlights if necessary.
-                times_basis = int(np.floor(exp_durations['num_highlights'] / len(self.possible_targets)))
+                times_basis = int(np.floor(params['num_highlights'] / len(self.possible_targets)))
                 highlights = self.possible_targets * times_basis
-                difference = exp_durations['num_highlights'] - (len(self.possible_targets) * times_basis)
+                difference = params['num_highlights'] - (len(self.possible_targets) * times_basis)
                 for _ in range(difference):
                     highlights.append(random.choice(self.possible_targets))
 
@@ -357,7 +357,7 @@ class Paradigm(object):
                     paradigm.draw_arrows(highlight, 
                                         highlighted=True,
                                         is_target=False,
-                                        display_time=exp_durations['highlight_length'])
+                                        display_time=params['highlight_length'])
 
                 # At the end of the trial, clear the screen again.
                 paradigm.clear_screen()
@@ -391,7 +391,7 @@ class Paradigm(object):
                     self.marker_stream.push_sample([f'pause-{local_clock()}'])
 
                     # Calculate the random pause duration.
-                    wait_duration = exp_durations['inter_trial_length'] \
+                    wait_duration = params['inter_trial_length'] \
                             + np.round(np.random.uniform(0, 1), 2)
                     
                     # Start the timer.
@@ -430,7 +430,7 @@ class Paradigm(object):
 
                     # Start the timer.
                     timer_start = local_clock()
-                    while local_clock() - timer_start < exp_durations['inter_block_length']:
+                    while local_clock() - timer_start < params['inter_block_length']:
                         pass
 
                     # Update the screen.
@@ -465,18 +465,6 @@ class Paradigm(object):
 #routines. We should change these to work in conjunction once we get
 #the classifiers working sometime in the future.
 if __name__=="__main__":
-    # Define the durations for each part of the paradigm.
-    # Time is in seconds.
-    exp_durations = {
-        'highlight_length': 0.25,
-        'target_length': 1,
-        'baseline_length': 3,
-        'delay_baseline_arrows': 1,
-        'inter_highlight_length': 0.2,
-        'inter_block_length': 3,
-        'inter_trial_length': 1,
-        'num_highlights': 10
-    }
 
     # Define the targets that are going to be shown
     targets = ['left', 'right', 'up', 'down']
@@ -484,13 +472,16 @@ if __name__=="__main__":
     # Initialise Pygame
     pg.init()
 
+    # Get display info to set the window size.
+    sc = pg.display.Info()
+
     # Create a Pygame window
-    window = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    window = pg.display.set_mode((sc.current_w, sc.current_h))
     pg.display.set_caption('P300 Paradigm')
-    window.fill(GREY)
+    window.fill(BLACK)
 
     # Initialise the Paradigm object to manage the functions and variables.
-    paradigm = Paradigm(window, exp_durations, targets)
+    paradigm = Paradigm(window, params, targets)
 
     # Run the experiment.
     paradigm.run_exp(tot_trials=8, tot_blocks=2)
