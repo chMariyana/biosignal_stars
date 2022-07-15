@@ -6,10 +6,10 @@ import os
 # DIRECTORIES
 ####################################################################
 PROJECT_DIR = os.path.abspath(os.path.curdir)
-OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline/configs')
+OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline', 'configs')
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output')
-GLOBAL_CONFIG_FILE = os.path.join(PROJECT_DIR, 'global_configs/')
+GLOBAL_CONFIG_FILE = os.path.join(PROJECT_DIR, 'global_configs')
 ####################################################################
 # Strings
 ####################################################################
