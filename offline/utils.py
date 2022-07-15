@@ -358,6 +358,12 @@ def get_epochs_and_targets(eeg_data, event_arr: np.ndarray, exp_config: dict):
 
 
 def modify_events(event_arr: np.ndarray, event_id: dict):
+    """
+
+    :param event_arr:
+    :param event_id:
+    :return:
+    """
     events_seq = event_arr[:, 2]
 
     target_events_seq = np.zeros_like(events_seq)
@@ -379,8 +385,8 @@ def modify_events(event_arr: np.ndarray, event_id: dict):
     event_arr[targets_shown, 2] = 100
 
     event_id_orig = event_id.copy()
-    event_id.update({'target_true': 100,
-                     'target_false': 99})
+    event_id.update({GLOB.HIGHLIGHT_TARGET_TRUE: 100,
+                     GLOB.HIGHLIGHT_TARGET_FALSE: 99})
 
     return event_arr, event_id
 
