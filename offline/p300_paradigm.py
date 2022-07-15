@@ -353,8 +353,12 @@ class Paradigm(object):
 
                     # Push sample before drawing, because it'll wait during the drawing!
                     highlight_string = self.convert_position(highlight)
-                    self.marker_stream.push_sample([f'highlight_{highlight_string}-{local_clock()}'])
-                    paradigm.draw_arrows(highlight, 
+                    if highlight_string == target:
+                        self.marker_stream.push_sample([f'highlight_p300-{local_clock()}'])
+                    else:
+                        self.marker_stream.push_sample([f'highlight_control-{local_clock()}'])
+
+                    paradigm.draw_arrows(highlight,
                                         highlighted=True,
                                         is_target=False,
                                         display_time=params['highlight_length'])
