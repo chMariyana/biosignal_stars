@@ -1,5 +1,4 @@
 import numpy as np
-
 import mne
 import pyxdf
 import re
@@ -297,8 +296,8 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
     scores = []
     k_ldas = []
-    # Determining indices of the 5 different training and testing datasets
-    kf = KFold(n_splits=5, shuffle=True, random_state=1234)
+    #Determining indices of the 5 different training and testing datasets
+    kf = KFold(n_splits=5, shuffle=True, random_state = 1234)
     for train_index, test_index in kf.split(concat_epochs_ndarray):
         # Data (ndarrays and MNE epochs) are split into training and testing datasets
         X_train, X_test = concat_epochs_ndarray[train_index], concat_epochs_ndarray[test_index]
@@ -311,11 +310,10 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
         # Initialize and train the LDA, calculate best features, test the data
         lda = LinearDiscriminantAnalysis()
-        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select,
-                                                         direction="backward").fit(X_train, y_train).support_
-        fitted_lda = lda.fit(X_train[:, selected_feature_idx], y_train)
-        k_ldas.append([fitted_lda, selected_feature_idx, X_train, y_train, X_test, y_test])
-        score = fitted_lda.score(X_test[:, selected_feature_idx], y_test)
+        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select, direction="backward").fit(X_train, y_train).support_
+        fitted_lda = lda.fit(X_train[:,selected_feature_idx], y_train)
+        k_ldas.append([fitted_lda, selected_feature_idx,  X_train, y_train, X_test, y_test ])
+        score = fitted_lda.score(X_test[:,selected_feature_idx], y_test)
         scores.append(score)
 
     print(f'Max score: {np.max(scores)}, std: {np.std(scores)}.')

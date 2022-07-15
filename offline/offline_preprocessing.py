@@ -19,7 +19,7 @@ import json
 from utils import load_xdf_data
 
 PROJECT_DIR = os.path.abspath(os.path.curdir)
-OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline/configs')
+OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline', 'configs')
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 
 SIGNAL_DURATION = .650
