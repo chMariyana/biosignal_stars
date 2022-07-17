@@ -113,7 +113,7 @@ def load_xdf_data(file, with_stim=False):
                 time_offset = float(stream['footer']['info']['clock_offsets'][0]['offset'][1]['value'][0])
 
             # Convert all raw timestamps to the Unix format.
-            # raw_time = raw_time - time_offset
+            raw_time = raw_time - time_offset
             # Get the smallest time stamp of both the data and marker stream
             offset = min(cue_times[0], raw_time[0])
             # Convert the corrected time stamps into indices, which are are basically the index
