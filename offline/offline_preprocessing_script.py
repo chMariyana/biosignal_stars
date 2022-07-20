@@ -47,6 +47,10 @@ def preprocess(global_config_dict: dict):
         flow, fhigh = preprocess_config['min_pass_freq'], preprocess_config['max_pass_freq']
         raw_filt = raw.filter(flow, fhigh)
 
+        if preprocess_config['downsample_frequency']:
+            raw_filt = raw_filt.resample(sfreq=preprocess_config['downsample_frequency'])
+
+
         # Apply Common Average Referencing.
         raw_car, _ = mne.set_eeg_reference(raw_filt, 'average', copy=True, ch_type='eeg')
 
