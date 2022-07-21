@@ -33,7 +33,7 @@ def load_xdf_data(file, with_stim=False):
             marker_streams.append(stream)
             print(f'{stream_name} --> marker stream')
 
-        elif 'signal' in stream_type:
+        elif 'eeg' in stream_type:
             data_stream.append(stream)
             print(f'{stream_name} --> data stream')
 
@@ -423,15 +423,16 @@ def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: 
     return epochs_highlights_targets, epochs_highlights_notargets
 
 
-def get_labeled_dataset(epochs_highlights_targets, epochs_highlights_notargets):
+def get_labeled_dataset(epochs_highlights_targets: mne.Epochs, epochs_highlights_notargets: mne.Epochs):
+    """
+    Creates arrays from the epochs provided and array with labels. Data is not shuffled!
+    :param epochs_highlights_targets: mne.Epochs for target condition
+    :param epochs_highlights_notargets: mne.Epochs for no target condition
+    :return: X, y : nd arrays
     """
 
-    :param epochs_highlights_targets:
-    :param epochs_highlights_notargets:
-    :return:
-    """
-
-    x_all = np.concatenate([epochs_highlights_targets, epochs_highlights_notargets])
-    y_all = epochs_highlights_notargets.events.shape[0] * [0] + epochs_highlights_targets.events.shape[0] * [1]
+    x_all = np.concatenate([epochs_highlights_notargets.get_data(), epochs_highlights_targets.get_data()])
+    y_all = np.asarray(epochs_highlights_notargets.events.shape[0] * [0]
+                       + epochs_highlights_targets.events.shape[0] * [1])
 
     return x_all, y_all
