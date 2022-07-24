@@ -436,3 +436,95 @@ def get_labeled_dataset(epochs_highlights_targets: mne.Epochs, epochs_highlights
                        + epochs_highlights_targets.events.shape[0] * [1])
 
     return x_all, y_all
+
+
+def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig,  total_trial_duration, highlights_per_trial=30,
+                   decim_facor=2):
+    event_labels = event_arr_orig[:, 2]
+    event_times = event_arr_orig[:, 0]
+
+    # inds_hd = np.where(event_labels==2)[0]
+    # inds_hl = np.where(event_labels==3)[0]
+    # inds_hr = np.where(event_labels==4)[0]
+    # inds_hu = np.where(event_labels==5)[0]
+
+    # times_hd = event_times[inds_hd]
+    # times_hl = event_times[inds_hl]
+    # times_hr = event_times[inds_hr]
+    # times_hu = event_times[inds_hu]
+
+    inds_trial_begin = np.where(event_labels == 11)[0]
+    # inds_trial_begin
+
+    inds_target_shown = np.where((event_labels > 6) & (event_labels < 11))[0]
+    inds_target_shown
+
+    targets_seq = event_labels[inds_target_shown]
+    targets_seq
+
+    total_trial_duration
+
+    events_seq = event_arr_orig[:, 2]
+
+    # target_events_seq = np.zeros_like(events_seq)
+
+    highlight_inds = (events_seq > 1) & (events_seq < 6)
+    event_arr_mod = event_arr_orig.copy()
+    event_arr_mod[highlight_inds, 2] = 20
+
+    event_id_mod = event_id_orig.copy()
+    event_id_mod.update({'h': 20})
+
+    event_id2 = {'base_trial': 0,
+                 'b_end': 1,
+                 #  'h_d': 2,
+                 #  'h_l': 3,
+                 #  'h_r': 4,
+                 #  'h_u': 5,
+                 'pause': 6,
+                 't_d': 7,
+                 't_l': 8,
+                 't_r': 9,
+                 't_u': 10,
+                 'tr_begin': 11,
+                 'h': 20}
+    epochs_highlights_ = mne.Epochs(filtered_raw,
+                                    events=event_arr_mod,
+                                    event_id={'h': 20},
+                                    tmin=.1,
+                                    tmax=.5,
+                                    baseline=None,
+                                    preload=True,
+                                    event_repeated='drop', decim=decim_facor)
+
+    highlights_seq = event_arr_orig[:, 2][event_arr_mod[:, 2] == 20]
+
+    targets_final = []
+    highlights_final_epochs = []
+    highlights_labels = []
+    j = 0
+
+    for i in np.arange(0, len(epochs_highlights_), highlights_per_trial):
+        ep = epochs_highlights_[i: i + highlights_per_trial]
+        highlight_labels = highlights_seq[i: i + highlights_per_trial]
+        target_ = targets_seq[j]
+        j += 1
+        epochs_down = ep[highlight_labels == 2].average()
+        epochs_left = ep[highlight_labels == 3].average()
+        epochs_right = ep[highlight_labels == 4].average()
+        epochs_up = ep[highlight_labels == 5].average()
+
+        highlights_final_epochs.append(epochs_down)
+        highlights_final_epochs.append(epochs_left)
+
+        highlights_final_epochs.append(epochs_right)
+
+        highlights_final_epochs.append(epochs_up)
+
+        highlights_labels.extend([2, 3, 4, 5])
+        targets_final.extend([target_] * 4)
+        t_samples = [x for x in range(len(targets_final)) if highlights_labels[x] == targets_final[x] - 5]
+
+    return highlights_final_epochs, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples
+
+

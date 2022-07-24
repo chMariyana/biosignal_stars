@@ -1,14 +1,14 @@
 experiment_file:  'config_short_red-yellow.json'
 preprocess:
-  raw_data_dir: 'default'
-  min_pass_freq: .1
-  max_pass_freq: 10
+  session_dir: 'ses-ses-15-07-2022-short-rg/eeg'
+  min_pass_freq: 1
+  max_pass_freq: 15
   apply_referencing: 'average'
 #  use decimate instead of downsample
-  downsample_frequency: None
+  decim_factor: 2
 #  decimate_n:
-  signal_duration_min: 0
-  signal_duration_max: .65
+  signal_duration_min: .1
+  signal_duration_max: .5
 
 process:
   n_folds:
