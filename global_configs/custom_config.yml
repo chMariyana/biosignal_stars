@@ -1,6 +1,7 @@
 experiment_file:  'config_short_red-yellow.json'
 preprocess:
-  session_dir: 'ses-ses-15-07-2022-short-rg/eeg'
+  # this folder should be in data/raw
+  session_dir: 'ses-ses-15-07-2022-short-rg'
   min_pass_freq: 1
   max_pass_freq: 15
   apply_referencing: 'average'
