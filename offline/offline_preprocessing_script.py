@@ -101,7 +101,7 @@ def preprocess(global_config_dict: dict):
                          ))
         y[t_samples] = 1
         # # create name for the current output file and save
-        output_file = os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, session_dir,
+        output_file = os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'],
                                    f'preprocessed_{run[:-3]}pickle')
         Path(os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'])).mkdir(parents=True, exist_ok=True)
 
