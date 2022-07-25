@@ -498,11 +498,11 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
                                     preload=True,
                                     event_repeated='drop', decim=decim_facor)
     # Xdawn instance
-    xd = Xdawn(n_components=2, signal_cov=None)
-
-    # Fit xdawn
-    xd.fit_transform(epochs_highlights_)
-    epochs_highlights_ = xd.apply(epochs_highlights_)['h']
+    # xd = Xdawn(n_components=2, signal_cov=None)
+    #
+    # # Fit xdawn
+    # xd.fit_transform(epochs_highlights_)
+    # epochs_highlights_ = xd.apply(epochs_highlights_)['h']
 
     highlights_seq = event_arr_orig[:, 2][event_arr_mod[:, 2] == 20]
 

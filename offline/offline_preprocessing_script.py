@@ -67,7 +67,7 @@ def preprocess(global_config_dict: dict):
                            highlights_per_trial,
                            decim_facor=preprocess_config['decim_factor'],
                            t_min=preprocess_config['signal_duration_min'],
-                           t_max=preprocess_config['signal_duration_min']
+                           t_max=preprocess_config['signal_duration_max']
                            )
         chnum, size = highlights_final_evoked[0].get_data().shape
         x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked])
