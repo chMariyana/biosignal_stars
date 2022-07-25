@@ -12,7 +12,15 @@ from offline.utils import load_xdf_data, get_avg_evoked, get_highlight_trials_cl
 
 
 class OnlineProcessor:
+    """
+    A class to be used in online processing of the data. Given a chunk of data (one trial) and the corresponding
+     event array and ids , handles preprocessing and classification.
+    """
     def __init__(self, global_config_file: str = GLOB.GLOBAL_CONFIG_FILE):
+        """
+
+        :param global_config_file:
+        """
         self.global_config = yaml.load(global_config_file, Loader=yaml.FullLoader)
         self.preprocess_config = self.global_config['preprocess']
         self.online_config = self.global_config['online']
@@ -32,7 +40,14 @@ class OnlineProcessor:
         with open(model_path, mode='rb') as opened_file:
             self.clf = pickle.load(opened_file)
 
-    def preprocess(self, raw, event_arr, event_id):
+    def preprocess(self, raw, event_arr: np.ndarray, event_id: dict):
+        """
+
+        :param raw: input data
+        :param event_arr: ndarray of events timestamps and event ids
+        :param event_id: dict name of events are the keys and corresponding int ids as values
+        :return: (evoked data, highlights sequence)
+        """
 
         highlights_per_trial = self.params['num_highlights']
 
@@ -76,6 +91,12 @@ class OnlineProcessor:
         return x, highlights_labels
 
     def classify_single_trial(self, trial_data: np.ndarray, highlights_labels: np.ndarray,):
+        """
+
+        :param trial_data: ndarray of size (num arrow types, num channels)
+        :param highlights_labels: ndarray of arrow types, size (num arrow types, )
+        :return: int label, predicted direction
+        """
 
         inds_selected_ch = self.online_config['ind_selected_channels']
         # reshape data and extract features
@@ -85,7 +106,20 @@ class OnlineProcessor:
         pred_label = highlights_labels[np.argmax(trial_predictions)]
         self.predictions.append(pred_label)
         self.X_all = np.concatenate([self.X_all, X])
+
         return pred_label
+
+    def get_prediction(self, raw_trial, event_arr: np.ndarray, event_id: dict):
+        """
+
+        :param raw_trial: input data
+        :param event_arr: ndarray of events timestamps and event ids
+        :param event_id: dict name of events are the keys and corresponding int ids as values
+        :return: predicted label (arrow direction)
+        """
+        prep_data, highlights_labels =  self.preprocess(raw_trial, event_arr, event_id)
+
+        return self.classify_single_trial(prep_data, highlights_labels)
 
 
 
