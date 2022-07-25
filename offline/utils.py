@@ -463,13 +463,8 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
     # inds_trial_begin
 
     inds_target_shown = np.where((event_labels > 6) & (event_labels < 11))[0]
-    inds_target_shown
 
     targets_seq = event_labels[inds_target_shown]
-    targets_seq
-
-    total_trial_duration
-
     events_seq = event_arr_orig[:, 2]
 
     # target_events_seq = np.zeros_like(events_seq)
@@ -514,22 +509,21 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
 
     for i in np.arange(0, len(epochs_highlights_), highlights_per_trial):
         ep = epochs_highlights_[i: i + highlights_per_trial]
-        highlight_labels = highlights_seq[i: i + highlights_per_trial]
+        highlight_labels_trial = highlights_seq[i: i + highlights_per_trial]
         target_ = targets_seq[j]
         # ep_b = epochs_baselines_[j].get_data()
         # baseline_trial = ep_b.mean(0).mean(1)
         j += 1
         #
-        # epochs_down = correct_baseline_evoked(ep[highlight_labels == 2].average(), baseline_trial)
-        # epochs_left = correct_baseline_evoked(ep[highlight_labels == 3].average() , baseline_trial)
-        # epochs_right = correct_baseline_evoked(ep[highlight_labels == 4].average(), baseline_trial)
-        # epochs_up = correct_baseline_evoked(ep[highlight_labels == 5].average() , baseline_trial)
+        # epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == 2].average(), baseline_trial)
+        # epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
+        # epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
+        # epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average() , baseline_trial)
 
-        epochs_down = ep[highlight_labels == 2].average()
-        epochs_left = ep[highlight_labels == 3].average()
-        epochs_right = ep[highlight_labels == 4].average()
-        epochs_up = ep[highlight_labels == 5].average()
-
+        epochs_down = ep[highlight_labels_trial == 2].average()
+        epochs_left = ep[highlight_labels_trial == 3].average()
+        epochs_right = ep[highlight_labels_trial == 4].average()
+        epochs_up = ep[highlight_labels_trial == 5].average()
 
         highlights_final_evoked.append(epochs_down)
         highlights_final_evoked.append(epochs_left)
