@@ -12,6 +12,7 @@ from sklearn.model_selection import KFold
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.feature_selection import SequentialFeatureSelector
 from global_configs import globals as GLOB
+from mne.preprocessing import Xdawn
 
 
 def load_xdf_data(file, with_stim=False):
@@ -34,6 +35,10 @@ def load_xdf_data(file, with_stim=False):
             print(f'{stream_name} --> marker stream')
 
         elif 'eeg' in stream_type:
+            data_stream.append(stream)
+            print(f'{stream_name} --> data stream')
+
+        elif 'EEG' in stream_type:
             data_stream.append(stream)
             print(f'{stream_name} --> data stream')
 
@@ -296,8 +301,8 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
     scores = []
     k_ldas = []
-    #Determining indices of the 5 different training and testing datasets
-    kf = KFold(n_splits=5, shuffle=True, random_state = 1234)
+    # Determining indices of the 5 different training and testing datasets
+    kf = KFold(n_splits=5, shuffle=True, random_state=1234)
     for train_index, test_index in kf.split(concat_epochs_ndarray):
         # Data (ndarrays and MNE epochs) are split into training and testing datasets
         X_train, X_test = concat_epochs_ndarray[train_index], concat_epochs_ndarray[test_index]
@@ -310,10 +315,11 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
 
         # Initialize and train the LDA, calculate best features, test the data
         lda = LinearDiscriminantAnalysis()
-        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select, direction="backward").fit(X_train, y_train).support_
-        fitted_lda = lda.fit(X_train[:,selected_feature_idx], y_train)
-        k_ldas.append([fitted_lda, selected_feature_idx,  X_train, y_train, X_test, y_test ])
-        score = fitted_lda.score(X_test[:,selected_feature_idx], y_test)
+        selected_feature_idx = SequentialFeatureSelector(lda, n_features_to_select=n_features_to_select,
+                                                         direction="backward").fit(X_train, y_train).support_
+        fitted_lda = lda.fit(X_train[:, selected_feature_idx], y_train)
+        k_ldas.append([fitted_lda, selected_feature_idx, X_train, y_train, X_test, y_test])
+        score = fitted_lda.score(X_test[:, selected_feature_idx], y_test)
         scores.append(score)
 
     print(f'Max score: {np.max(scores)}, std: {np.std(scores)}.')
@@ -393,7 +399,7 @@ def modify_events(event_arr: np.ndarray, event_id: dict):
 
 
 def get_highlight_trials_class_based(eeg_data, event_arr: np.ndarray, event_id: dict, preprocess_config: dict,
-                                     modify_evens: bool =True):
+                                     modify_evens: bool = True):
     """
     Create dataset and labels as nd arrays based on experiment configs
 
@@ -438,8 +444,8 @@ def get_labeled_dataset(epochs_highlights_targets: mne.Epochs, epochs_highlights
     return x_all, y_all
 
 
-def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig,  total_trial_duration, highlights_per_trial=30,
-                   decim_facor=2):
+def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_duration, highlights_per_trial=30,
+                   decim_facor=2, t_min=.1, t_max=.65):
     event_labels = event_arr_orig[:, 2]
     event_times = event_arr_orig[:, 0]
 
@@ -474,57 +480,82 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig,  total_trial_dur
 
     event_id_mod = event_id_orig.copy()
     event_id_mod.update({'h': 20})
+    epochs_baselines_ = mne.Epochs(filtered_raw,
+                                   events=event_arr_mod,
+                                   event_id=11,
+                                   tmin=-1,
+                                   tmax=0,
+                                   baseline=None,
+                                   preload=True,
+                                   event_repeated='drop', decim=decim_facor)
 
-    event_id2 = {'base_trial': 0,
-                 'b_end': 1,
-                 #  'h_d': 2,
-                 #  'h_l': 3,
-                 #  'h_r': 4,
-                 #  'h_u': 5,
-                 'pause': 6,
-                 't_d': 7,
-                 't_l': 8,
-                 't_r': 9,
-                 't_u': 10,
-                 'tr_begin': 11,
-                 'h': 20}
     epochs_highlights_ = mne.Epochs(filtered_raw,
                                     events=event_arr_mod,
                                     event_id={'h': 20},
-                                    tmin=.1,
-                                    tmax=.5,
+                                    tmin=t_min,
+                                    tmax=t_max,
                                     baseline=None,
                                     preload=True,
                                     event_repeated='drop', decim=decim_facor)
+    # Xdawn instance
+    xd = Xdawn(n_components=2, signal_cov=None)
+
+    # Fit xdawn
+    xd.fit_transform(epochs_highlights_)
+    epochs_highlights_ = xd.apply(epochs_highlights_)['h']
 
     highlights_seq = event_arr_orig[:, 2][event_arr_mod[:, 2] == 20]
 
     targets_final = []
-    highlights_final_epochs = []
+    highlights_final_evoked = []
     highlights_labels = []
+
     j = 0
 
     for i in np.arange(0, len(epochs_highlights_), highlights_per_trial):
         ep = epochs_highlights_[i: i + highlights_per_trial]
         highlight_labels = highlights_seq[i: i + highlights_per_trial]
         target_ = targets_seq[j]
+        # ep_b = epochs_baselines_[j].get_data()
+        # baseline_trial = ep_b.mean(0).mean(1)
         j += 1
+        #
+        # epochs_down = correct_baseline_evoked(ep[highlight_labels == 2].average(), baseline_trial)
+        # epochs_left = correct_baseline_evoked(ep[highlight_labels == 3].average() , baseline_trial)
+        # epochs_right = correct_baseline_evoked(ep[highlight_labels == 4].average(), baseline_trial)
+        # epochs_up = correct_baseline_evoked(ep[highlight_labels == 5].average() , baseline_trial)
+
         epochs_down = ep[highlight_labels == 2].average()
         epochs_left = ep[highlight_labels == 3].average()
         epochs_right = ep[highlight_labels == 4].average()
         epochs_up = ep[highlight_labels == 5].average()
 
-        highlights_final_epochs.append(epochs_down)
-        highlights_final_epochs.append(epochs_left)
 
-        highlights_final_epochs.append(epochs_right)
+        highlights_final_evoked.append(epochs_down)
+        highlights_final_evoked.append(epochs_left)
 
-        highlights_final_epochs.append(epochs_up)
+        highlights_final_evoked.append(epochs_right)
+
+        highlights_final_evoked.append(epochs_up)
 
         highlights_labels.extend([2, 3, 4, 5])
         targets_final.extend([target_] * 4)
-        t_samples = [x for x in range(len(targets_final)) if highlights_labels[x] == targets_final[x] - 5]
 
-    return highlights_final_epochs, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples
+    # find which highlight correspond to the target for the given trial
+    t_samples = [x for x in range(len(targets_final)) if highlights_labels[x] == (targets_final[x] - 5)]
+    # just saving
+    event_arr_, _ = modify_events(event_arr_orig.copy(), event_id_orig.copy())
+    epoch_labels = event_arr_[:, 2]
+    epoch_labels = epoch_labels[epoch_labels > 21]
+
+    return highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, \
+           t_samples, epochs_highlights_, epoch_labels
 
 
+def correct_baseline_evoked(evoked, baseline):
+    data = evoked.data
+    for i in range(data.shape[1]):
+        data[:, i] -= baseline
+    evoked.data = data
+
+    return evoked

@@ -11,6 +11,9 @@ OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline', 'configs')
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
 PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output')
 GLOBAL_CONFIG_FILE = os.path.join(PROJECT_DIR, 'global_configs', 'custom_config.yml')
+
+MODEL_DATA_DIR = os.path.join(DATA_DIR, 'model')
+
 ####################################################################
 # Strings
 ####################################################################

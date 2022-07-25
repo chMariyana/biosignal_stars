@@ -1,19 +1,27 @@
-experiment_file:  'config_short_red-yellow.json'
+experiment_file:  'config_short_red-yellow.json' #'config_long_blue-green.json' # 'config_short_red-yellow.json'
 preprocess:
   # this folder should be in data/raw
-  session_dir: 'ses-ses-15-07-2022-short-rg'
+  session_dir: 'ses-15-07-2022-short-rg'
   min_pass_freq: 1
-  max_pass_freq: 20
+  max_pass_freq: 15
+
   apply_referencing: 'average'
 #  use decimate instead of downsample
-  decim_factor: 2
+  decim_factor: 4
+
 #  decimate_n:
   signal_duration_min: .1
-  signal_duration_max: .5
+  signal_duration_max: .65
+#  return_full: 0
 
 process:
   n_folds:
   feature_selection:
   classifier:
+
+online:
+  model_file: ""
+  ind_selected_channels:
+
 
 

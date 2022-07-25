@@ -33,14 +33,11 @@ def preprocess(global_config_dict: dict):
     # Load the configurations of the paradigm
     with open(os.path.join(GLOB.OFFLINE_CONFIG_DIR, global_config_dict['experiment_file']), 'r') as opened_file:
         params = json.load(opened_file)
-    preprocess_config =  global_config_dict['preprocess']
+    preprocess_config = global_config_dict['preprocess']
 
     session_dir = os.path.join(GLOB.DATA_DIR, 'raw', preprocess_config['session_dir'], 'eeg')
     # if preprocess_config['raw_data_dir'] == 'default':
-    if '-short-' in preprocess_config['session_dir']:
-        highlights_per_trial = 30
-    else:
-        highlights_per_trial = 15
+    highlights_per_trial = params['num_highlights']
 
     epochs_list = []
     for run_no, run in enumerate(sorted(os.listdir(session_dir))):
@@ -51,50 +48,27 @@ def preprocess(global_config_dict: dict):
             print(f'Could not read file {run}, continuing on next one.')
             continue
 
-
         # Implement the band-pass filter
         flow, fhigh = preprocess_config['min_pass_freq'], preprocess_config['max_pass_freq']
         raw_filt = raw.filter(flow, fhigh)
-
-        # if preprocess_config['downsample_frequency']:
-        #     raw_filt = raw_filt.resample(sfreq=preprocess_config['downsample_frequency'])
-        #
-        #
-        # # Apply Common Average Referencing.
-        # if preprocess_config['apply_car']:
-        #     raw_car, _ = mne.set_eeg_reference(raw_filt, 'average', copy=True, ch_type='eeg')
 
         # Now we want to epoch our data to trials and do a baseline correction.
         total_trial_duration = params[GLOB.BASELINE_LENGTH] + params[GLOB.TARGET_LENGTH] + \
                                params[GLOB.HIGHLIGHT_LENGTH] * params[GLOB.NUM_HIGHLIGHTS] + \
                                params[GLOB.INTER_HIGHLIGHT_LENGTH] * (params[GLOB.NUM_HIGHLIGHTS] )
-        # tmin, tmax = -params[GLOB.BASELINE_LENGTH], total_trial_duration
-        # epochs_list.append(mne.Epochs(raw_car,
-        #                               events=event_arr,
-        #                               event_id=event_id,
-        #                               tmin=tmin,
-        #                               tmax=tmax,
-        #                               baseline=(-params[GLOB.BASELINE_LENGTH], 0),
-        #                               # We apply baseline correction here !!!!!!!!!!!!!
-        #                               preload=True,
-        #                               event_repeated='drop'))
-        # # get epochs for highlights based on target shown
-        # epochs_highlights_targets, epochs_highlights_notargets =\
-        #     get_highlight_trials_class_based(raw_car, event_arr, event_id, preprocess_config)
-        # # get data as nd array and label vector
-        # x_all, y_all = get_labeled_dataset(epochs_highlights_targets, epochs_highlights_notargets)
-        # # create name for the current output file and save
-        # output_file = os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, f'preprocessed_trial_{trial_no}')
-        # with open(output_file, 'wb') as opened_file:
-        #     pickle.dump((x_all, y_all), opened_file)
+        print(f"getting avg evokeds: ")
 
-        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples =\
+        print(f"{total_trial_duration,highlights_per_trial,preprocess_config['decim_factor']}")
+        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs=\
             get_avg_evoked(raw_filt,
                            event_arr.copy(),
                            event_id.copy(),
                            total_trial_duration,
                            highlights_per_trial,
-                           decim_facor=preprocess_config['decim_factor'])
+                           decim_facor=preprocess_config['decim_factor'],
+                           t_min=preprocess_config['signal_duration_min'],
+                           t_max=preprocess_config['signal_duration_min']
+                           )
         chnum, size = highlights_final_evoked[0].get_data().shape
         x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked])
         y = np.zeros(len(highlights_final_evoked
@@ -104,9 +78,10 @@ def preprocess(global_config_dict: dict):
         output_file = os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'],
                                    f'preprocessed_{run[:-3]}pickle')
         Path(os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'])).mkdir(parents=True, exist_ok=True)
+        full_data = (highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs)
 
         with open(output_file, 'wb') as opened_file:
-            pickle.dump((x, y), opened_file)
+            pickle.dump((x, y, full_data), opened_file)
 
     # Concatenate the epochs
     # epochs = mne.concatenate_epochs(epochs_list)
