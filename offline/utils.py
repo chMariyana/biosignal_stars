@@ -444,7 +444,7 @@ def get_labeled_dataset(epochs_highlights_targets: mne.Epochs, epochs_highlights
     return x_all, y_all
 
 
-def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_duration, highlights_per_trial=30,
+def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_duration, n_highlights_per_trial=30,
                    decim_facor=2, t_min=.1, t_max=.65):
     event_labels = event_arr_orig[:, 2]
     event_times = event_arr_orig[:, 0]
@@ -507,9 +507,12 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
 
     j = 0
 
-    for i in np.arange(0, len(epochs_highlights_), highlights_per_trial):
-        ep = epochs_highlights_[i: i + highlights_per_trial]
-        highlight_labels_trial = highlights_seq[i: i + highlights_per_trial]
+    for i in np.arange(0, len(epochs_highlights_), n_highlights_per_trial):
+        # get all epochs of highlights for current trial i
+        ep = epochs_highlights_[i: i + n_highlights_per_trial]
+        # get all labels of highlights for current trial i (2, 3, 4, 5 corresponding to 'down', 'left', etc.)
+        highlight_labels_trial = highlights_seq[i: i + n_highlights_per_trial]
+        # trial target
         target_ = targets_seq[j]
         # ep_b = epochs_baselines_[j].get_data()
         # baseline_trial = ep_b.mean(0).mean(1)
