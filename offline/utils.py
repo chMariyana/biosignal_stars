@@ -14,6 +14,94 @@ from sklearn.model_selection import KFold
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.feature_selection import SequentialFeatureSelector
 
+def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
+    # Get the sampling frequency
+    sfreq = 250
+
+    # Get the data --> only the first 8 rows are for the electrodes
+    data = data_stream.T
+    # Set the channel names
+    ch_names = ['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
+
+    # Define the channel types
+    ch_types = ['eeg'] * len(ch_names)
+
+    # Get the time stamps of the EEG recording
+    raw_time = data_timestamp
+
+    # Check if there are available marker streams
+    cues = marker_stream
+
+    # Create a new list consisting of only cue strings
+    # since cues is normally a list of lists containing one string
+    tmp_list = []
+    for cue in cues:
+        # Discard the local clock
+        # e.g.: 'cue_rest-1649695139.3753629-3966.48780' --> 'cue_rest'
+        if '-' in cue[0]:
+            tmp_str = cue[0].split('-')[0]
+
+        # Discard the number of occurence at the end of cues
+        # e.g.: ['block_begin_1'] --> 'block_begin'
+        tmp_str = re.split(r'_\d+$', tmp_str)[0]
+
+        tmp_list.append(tmp_str)
+    # Overwrite cues with the newly created list
+    cues = tmp_list
+
+    # Use the timestamps from the messages as they are more reliable.
+    cue_times = [float(i[0].split("-")[1]) for i in marker_timestamp]
+
+    # Get the smallest time stamp of both the data and marker stream
+    offset = min(cue_times[0], raw_time[0])
+    # Convert the corrected time stamps into indices, which are are basically the index
+    # of the EEG sample that the cue took place.
+    cue_indices = (np.atleast_1d(cue_times) - offset) * sfreq
+    cue_indices = cue_indices.astype(int)
+
+    # Initialize the label encoder
+    le = LabelEncoder()
+    # Encode the cues using the label encoder
+    cues_encoded = le.fit_transform(cues)
+
+    info = mne.create_info(ch_names, sfreq, ch_types)
+
+    # Add the system name to the info
+    info['description'] = 'Emotiv-EPOC'
+
+    raw = mne.io.RawArray(data, info)
+
+    # Create a montage out of the 10-20 system
+    montage = mne.channels.make_standard_montage('standard_1020')
+
+    # Apply the montage
+    raw.set_montage(montage)
+
+    # A line to supress an error message
+    #raw._filenames = [file]
+
+    """# Convert time stamps of the Raw object to indices
+    raw_indices = raw.time_as_index(times=raw.times)
+
+    # Raise and error if the cue index is larger than the maximum
+    # index determined by the EEG recording
+    if cue_indices.max() > raw_indices.max():
+        raise Exception(
+            'Cue index is larger than the largest sample index of the Raw object!'
+        )"""
+
+    # Initialize the event array
+    event_arr = np.zeros((len(cue_indices), 3), dtype=int)
+
+    # Store the event information in an array of shape (len(cues), 3)
+    event_arr[:, 0] = cue_indices
+    event_arr[:, 2] = cues_encoded
+
+    # Create a class-encoding correspondence dictionary for the Epochs object
+    event_id = dict(zip(list(le.classes_), range(len(le.classes_))))
+
+    return raw, event_arr, event_id
+
 
 def load_xdf_data(file, with_stim=False):
 
