@@ -110,7 +110,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
 
 
 # Load the configurations of the paradigm
-with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_short_red-green.json'), 'r') as file:
+with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_long_red-yellow.json'), 'r') as file:
     params = json.load(file)
 SIGNAL_DURATION = 0.6
 apply_CAR = 0
@@ -302,10 +302,10 @@ def preprocess(raw, event_arr, event_id):
     raw_filt = raw.filter(flow, fhigh)
 
     # Now we crop the last trial.
-    start_trial = event_id['trial_begin']
-    end_trial = event_id['pause']
-    end_trial_ind = [index for index, value in enumerate(event_arr) if value[2] == end_trial]
-    last_trial_end = end_trial_ind[-1]
+    #start_trial = event_id['trial_begin']
+    #end_trial = event_id['pause']
+    #end_trial_ind = [index for index, value in enumerate(event_arr) if value[2] == end_trial]
+    #last_trial_end = end_trial_ind[-1]
 
     # This ordering is important in case a new trial already started but didn't end yet.
     #start_trial_ind = [index for index, value in enumerate(event_arr[:last_trial_end+1]) if value[2] == start_trial]
@@ -336,7 +336,7 @@ def preprocess(raw, event_arr, event_id):
 
     return x, highlights_labels
 
-def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray, inds_selected_ch):
+def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray, inds_selected_ch, X_all=None):
     """
     :param trial_data: ndarray of size (num arrow types, num channels, num_samples)
     :param highlights_labels: ndarray of arrow types, size (num arrow types, )
@@ -345,6 +345,7 @@ def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray,
 
     # reshape data and extract features
     X = trial_data[:, inds_selected_ch, :].reshape(trial_data.shape[0], -1)
+    print(X)
     # do some more stuff if needed
     trial_predictions = clf.predict(X)
     pred_label = highlights_labels[np.argmax(trial_predictions)]
@@ -438,7 +439,7 @@ if __name__ == '__main__':
                            params['highlight_length'] * params['num_highlights'] + \
                            params['inter_highlight_length'] * (params['num_highlights'] - 1)
 
-    buffer_size_stream = int(total_trial_duration*250)
+    buffer_size_stream = int(total_trial_duration*500)
     buffer_size_marker = 100
     chunk_size = 50
     labels_buffer_size = 10

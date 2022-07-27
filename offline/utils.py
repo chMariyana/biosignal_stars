@@ -429,6 +429,17 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
     # inds_trial_begin = np.where(event_labels == event_id_orig['trial_begin'])[0]
     inds_target_shown = np.where((event_labels > event_id_orig['pause']) & (event_labels < event_id_orig['trial_begin']))[0]
 
+    start_trial = event_id_orig['baseline_for_trial']
+    end_trial = event_id_orig['pause']
+    end_trial_ind = [index for index, value in enumerate(event_arr_orig) if value[2] == end_trial]
+    last_trial_end = end_trial_ind[-1]
+
+    # This ordering is important in case a new trial already started but didn't end yet.
+    start_trial_ind = [index for index, value in enumerate(event_arr_orig[:last_trial_end+1]) if value[2] == start_trial]
+    last_trial_start = start_trial_ind[-1]
+
+    event_arr_orig = event_arr_orig[last_trial_start:last_trial_end+1]
+
     # targets_seq = event_labels[inds_target_shown]
     events_seq = event_arr_orig[:, 2]
 
@@ -454,7 +465,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
 
     epochs_highlights_ = mne.Epochs(filtered_raw,
                                     events=event_arr_mod,
-                                    event_id={'h': 20},
+                                    event_id={'highlight_down': event_id_orig['highlight_down']},
                                     tmin=t_min,
                                     tmax=t_max,
                                     baseline=None,
@@ -476,6 +487,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
     j = 0
 
     for i in np.arange(0, len(epochs_highlights_), n_highlights_per_trial):
+        #if i+n_highlights_per_trial >len(epochs_highlights_):
         # get all epochs of highlights for current trial i
         ep = epochs_highlights_[i: i + n_highlights_per_trial]
         # get all labels of highlights for current trial i (2, 3, 4, 5 corresponding to 'down', 'left', etc.)
@@ -486,10 +498,34 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
         baseline_trial = ep_b.mean(0).mean(1)
         j += 1
         #
-        epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == 2].average(), baseline_trial)
-        epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
-        epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
-        epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average() , baseline_trial)
+
+        # Some highlights might be dropped, we will try to do without or copy one that does work.
+        drop_list = list([list(item) for item in epochs_highlights_.drop_log])
+        drop_list = [i for i in drop_list if i != ['IGNORED']]
+        #all_highlights = np.unique(highlight_labels_trial)
+        highlight_labels_trial[[i == ['TOO_SHORT'] for i in drop_list]] = -1
+
+        # Dirty fix
+        remaining_highlights = np.unique(highlight_labels_trial)
+        if event_id_orig['highlight_down'] in remaining_highlights:
+            epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == event_id_orig['highlight_down']].average(), baseline_trial)
+        else:
+            epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == remaining_highlights[0]].average(), baseline_trial)
+        if event_id_orig['highlight_left'] in remaining_highlights:
+            epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == event_id_orig['highlight_left']].average(), baseline_trial)
+        else:
+            epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == remaining_highlights[0]].average(), baseline_trial)
+        if event_id_orig['highlight_right'] in remaining_highlights:
+            epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == event_id_orig['highlight_right']].average(), baseline_trial)
+        else:
+            epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == remaining_highlights[0]].average(), baseline_trial)
+        if event_id_orig['highlight_up'] in remaining_highlights:
+            epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == event_id_orig['highlight_up']].average(), baseline_trial)
+        else:
+            epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == remaining_highlights[0]].average(), baseline_trial)
+        #epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
+        #epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
+        #epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average() , baseline_trial)
         # #
         # epochs_down = ep[highlight_labels_trial == 2].average()
         # epochs_left = ep[highlight_labels_trial == 3].average()
@@ -503,7 +539,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
 
         highlights_final_evoked.append(epochs_up)
 
-        highlights_labels.extend([2, 3, 4, 5])
+        highlights_labels.extend([event_id_orig['highlight_down'], event_id_orig['highlight_left'], event_id_orig['highlight_right'], event_id_orig['highlight_up']])
         # targets_final.extend([target_] * 4)
 
     return highlights_final_evoked, highlights_labels
