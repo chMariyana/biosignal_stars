@@ -13,10 +13,12 @@ from tqdm import tqdm
 import pause
 import datetime
 import re
+from offline.utils import get_avg_evoked_online
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from pylsl import StreamInlet, StreamOutlet, StreamInfo, resolve_stream
 
+X_all = None
 
 def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     # Get the sampling frequency
@@ -105,9 +107,6 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     event_id = dict(zip(list(le.classes_), range(len(le.classes_))))
 
     return raw, event_arr, event_id
-
-
-
 
 
 # Load the configurations of the paradigm
@@ -294,45 +293,76 @@ def receive_eeg_samples(inlet,
         return data_from_buffer, timestamps_from_buffer, n_new_samples
 
 
+
 # Returns the current time in milliseconds.
 def current_milli_time():
     return round(time.time() * 1000)
 
+def preprocess(raw, event_arr, event_id):
+    raw_filt = raw.filter(flow, fhigh)
 
-# %%
-def process_features(numpy_epochs, epochs, labels=None, csp=None):
+    # Now we crop the last trial.
+    start_trial = event_id['trial_begin']
+    end_trial = event_id['pause']
+    end_trial_ind = [index for index, value in enumerate(event_arr) if value[2] == end_trial]
+    last_trial_end = end_trial_ind[-1]
+
+    # This ordering is important in case a new trial already started but didn't end yet.
+    #start_trial_ind = [index for index, value in enumerate(event_arr[:last_trial_end+1]) if value[2] == start_trial]
+    #last_trial_start = start_trial_ind[-1]
+
+    #raw_cropped = raw_filt.crop(tmin=event_arr[last_trial_start][0], tmax=event_arr[last_trial_end][0])
+    #event_arr = event_arr[last_trial_start:last_trial_end+1]
+
+    print('Getting avg evokeds: ')
+
+    num_highlights = params['num_highlights']
+    print(f'{total_trial_duration, num_highlights, decim_factor}')
+
+    highlights_final_evoked, highlights_labels = get_avg_evoked_online(raw_filt,
+                                                                       event_arr.copy(),
+                                                                       event_id.copy(),
+                                                                       total_trial_duration,
+                                                                       num_highlights,
+                                                                       decim_facor=decim_factor,
+                                                                       t_min=.1,
+                                                                       t_max=.6)
+
+    chnum, size = highlights_final_evoked[0].get_data().shape
+    x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked[-4:]])
+    #
+    # with open(output_file, 'wb') as opened_file:
+    #     pickle.dump((x, y, full_data), opened_file)
+
+    return x, highlights_labels
+
+def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray, inds_selected_ch):
     """
-    Funtion that extracts the variance, band powers, and CSP features. """
+    :param trial_data: ndarray of size (num arrow types, num channels, num_samples)
+    :param highlights_labels: ndarray of arrow types, size (num arrow types, )
+    :return: int label, predicted direction
+    """
 
-    # X is the feature matrix with shape of (n_trials, n_features)
-    print(f'Epochs shape: {numpy_epochs.shape}.')
-    X = numpy_epochs[:, :, :].var(axis=2)
+    # reshape data and extract features
+    X = trial_data[:, inds_selected_ch, :].reshape(trial_data.shape[0], -1)
+    # do some more stuff if needed
+    trial_predictions = clf.predict(X)
+    pred_label = highlights_labels[np.argmax(trial_predictions)]
+    predictions.append(pred_label)
+    X_all = np.concatenate([X_all, X])
 
-    # specific frequency bands
-    FREQ_BANDS = {"theta": [4, 8.5],
-                  "alpha": [8.5, 11.5],
-                  "sigma": [11.5, 15.5],
-                  "beta": [15.5, 30]}
+    return pred_label
 
-    # FFT length and zero-padding is defined
-    power_of_2 = int(np.log2(numpy_epochs.shape[2]))
-    n_per_seg = 2 ** power_of_2
-    n_fft = 128
-    psds, freqs = psd_welch(epochs, n_fft=n_fft, n_per_seg=n_per_seg, picks='eeg', fmin=4, fmax=30.)
+def get_prediction(raw_trial, event_arr: np.ndarray, event_id: dict, inds_selected_ch):
+    """
+    :param raw_trial: input data
+    :param event_arr: ndarray of events timestamps and event ids
+    :param event_id: dict name of events are the keys and corresponding int ids as values
+    :return: predicted label (arrow direction)
+    """
+    prep_data, highlights_labels = preprocess(raw_trial, event_arr, event_id)
 
-    # Normalize the PSDs
-    # Output is of shape (samples, channels, frequencies).
-    psds /= np.sum(psds, axis=-1, keepdims=True)
-
-    # A list for all frequencies, each containing an array of shape (samples, channels)
-    powers = []
-    for fmin, fmax in FREQ_BANDS.values():
-        psds_band = psds[:, :, (freqs >= fmin) & (freqs < fmax)].mean(axis=-1)
-        powers.append(psds_band.reshape(len(psds), -1))
-    powers = np.array(powers)
-    powers = powers.reshape(-1, powers.shape[1])
-
-    X = np.concatenate((X, powers.T), axis=1)  # We add the power to the feature matrix (see tutorial 4).
+    return classify_single_trial(prep_data, highlights_labels, inds_selected_ch)
 
 
 if __name__ == '__main__':
@@ -352,15 +382,13 @@ if __name__ == '__main__':
     marker_inlet = StreamInlet(streams[int(marker_idx)])
     print("Connected to the inlet")
 
-    # Load the LDA and CSP fits.
-    """with open('/home/nathan/Workspace/NE2/Cybathlon/csp_subject1.pkl', 'rb') as file:
-        csp = pickle.load(file)
+    # Signal processing parameters
+    X_all = None
+    highlights_labels_all = None
+    predictions = []
 
-    with open('/home/nathan/Workspace/NE2/Cybathlon/fitted_lda_subject1.pkl', 'rb') as file:
-        lda = pickle.load(file)
-
-    with open('/home/nathan/Workspace/NE2/Cybathlon/Xtrain_subject1.pkl', 'rb') as file:
-        selected_features = pickle.load(file)"""
+    with open("test_model.pickle", mode='rb') as opened_file:
+        clf = pickle.load(opened_file)
 
     # Set the channel names
     ch_names =['AF3', 'F7', 'F3', 'FC5', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'FC6', 'F4', 'F8', 'AF4']
@@ -371,7 +399,9 @@ if __name__ == '__main__':
     # create mne info
     info = mne.create_info(ch_names, sfreq, ch_types)
     # Define the band-pass cutoff frequencies
-    flow, fhigh = 1, 10
+    flow, fhigh = 2, 10
+    decim_factor = 10
+
 
     # Supress MNE info messages and only show warnings
     mne.set_log_level(verbose='WARNING')
@@ -537,8 +567,6 @@ if __name__ == '__main__':
         # Processing
         # Check if the calibration is over:
         if pbar_closed and trial_end_time != last_trial_end_time:
-            print("aaa", last_trial_end_time)
-            print("bbb", trial_end_time)
 
             last_trial_end_time = trial_end_time
 
@@ -549,11 +577,17 @@ if __name__ == '__main__':
                                                   np.array(timestamps_buffer_stream),
                                                   np.array(timestamps_buffer_marker))
 
+            inds_selected_ch = [6, 7, 10, 5, 8, 11]
+            x, highlights_labels = get_prediction(raw, event_arr, event_id, inds_selected_ch)
+
+            # Dummy code
             labelsss = np.roll(labelsss, 1)
             new_classification = labelsss[1]
             print(new_classification)
             labels_buffer.append(new_classification)
             labels_buffer = labels_buffer[-labels_buffer_size:]
+
+            stream_classifier.push_sample(new_classification)
 
             # Plotting
             # If there are new samples in the buffer.
