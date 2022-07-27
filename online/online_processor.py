@@ -86,7 +86,7 @@ class OnlineProcessor:
     def classify_single_trial(self, trial_data: np.ndarray, highlights_labels: np.ndarray,):
         """
 
-        :param trial_data: ndarray of size (num arrow types, num channels, num_samples)
+        :param trial_data: ndarray of size (num arrow types, num channels)
         :param highlights_labels: ndarray of arrow types, size (num arrow types, )
         :return: int label, predicted direction
         """
