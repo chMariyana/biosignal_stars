@@ -62,7 +62,7 @@ def preprocess(global_config_dict: dict):
         print(f"getting avg evokeds: ")
 
         print(f"{total_trial_duration,highlights_per_trial,preprocess_config['decim_factor']}")
-        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs=\
+        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs, groups=\
             get_avg_evoked(raw_filt,
                            event_arr.copy(),
                            event_id.copy(),
@@ -81,7 +81,7 @@ def preprocess(global_config_dict: dict):
         output_file = os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'],
                                    f'preprocessed_{run[:-3]}pickle')
         Path(os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'])).mkdir(parents=True, exist_ok=True)
-        full_data = (highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs)
+        full_data = (highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs, groups)
 
         with open(output_file, 'wb') as opened_file:
             pickle.dump((x, y, full_data), opened_file)

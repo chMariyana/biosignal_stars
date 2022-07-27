@@ -505,6 +505,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
     highlights_final_evoked = []
     highlights_labels = []
 
+    group_labels = []
     j = 0
 
     for i in np.arange(0, len(epochs_highlights_), n_highlights_per_trial):
@@ -537,6 +538,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
 
         highlights_labels.extend([2, 3, 4, 5])
         targets_final.extend([target_] * 4)
+        group_labels.extend([j-1] * 4)
 
     # find which highlight correspond to the target for the given trial
     t_samples = [x for x in range(len(targets_final)) if highlights_labels[x] == (targets_final[x] - 5)]
@@ -546,7 +548,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
     epoch_labels = epoch_labels[epoch_labels > 21]
 
     return highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, \
-           t_samples, epochs_highlights_, epoch_labels - 99
+           t_samples, epochs_highlights_, epoch_labels - 99, group_labels
 
 
 def correct_baseline_evoked(evoked, baseline):
@@ -598,7 +600,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
     epochs_baselines_ = mne.Epochs(filtered_raw,
                                    events=event_arr_mod,
                                    event_id=11,
-                                   tmin=-1,
+                                   tmin=-1.5,
                                    tmax=0,
                                    baseline=None,
                                    preload=True,

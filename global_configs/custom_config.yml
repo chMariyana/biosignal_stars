@@ -1,10 +1,12 @@
-experiment_file:  'config_short_red-yellow.json' #'config_long_blue-green.json' # 'config_short_red-yellow.json'
+experiment_file: 'config_short_red-yellow.json' #'config_long_blue-green.json' #  'config_short_red-yellow.json'
 preprocess:
   # this folder should be in data/raw
-  session_dir: 'ses-15-07-2022-short-rg'
+  session_dir:  'ses-15-07-2022-short-rg'#'ses-lg'
+#  'ses-15-07-2022-short-rg'
   min_pass_freq: 2
   max_pass_freq: 10
-  selected_channels: [6, 7, 10, 5, 8, 11]
+  selected_channels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  #[6, 7, 10, 5, 8, 11]
   apply_referencing: 'average'
 #  use decimate instead of downsample
   decim_factor: 2
@@ -21,8 +23,8 @@ process:
   classifier:
 
 online:
-  model_file: ""
-  ind_selected_channels:
+  model_file: "test_model.pickle"
+  ind_selected_channels: [6, 7, 10, 5, 8, 11]
 
 
 
