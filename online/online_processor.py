@@ -8,7 +8,7 @@ import yaml
 from pathlib import Path
 
 from global_configs import globals as GLOB
-from offline.utils import load_xdf_data, get_avg_evoked, get_highlight_trials_class_based, get_labeled_dataset
+from offline.utils import load_xdf_data, get_avg_evoked_online
 
 
 class OnlineProcessor:
@@ -65,8 +65,7 @@ class OnlineProcessor:
         print(f"getting avg evokeds: ")
 
         print(f"{self.total_trial_duration, highlights_per_trial, self.preprocess_config['decim_factor']}")
-        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, \
-        h_epochs, labels_epochs = get_avg_evoked(raw_filt,
+        highlights_final_evoked, highlights_labels = get_avg_evoked_online(raw_filt,
                                                  event_arr.copy(),
                                                  event_id.copy(),
                                                  self.total_trial_duration,
@@ -78,12 +77,6 @@ class OnlineProcessor:
 
         chnum, size = highlights_final_evoked[0].get_data().shape
         x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked])
-        y = np.zeros(len(highlights_final_evoked
-                         ))
-        y[t_samples] = 1
-        full_data = (
-            highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs,
-            labels_epochs)
         #
         # with open(output_file, 'wb') as opened_file:
         #     pickle.dump((x, y, full_data), opened_file)
@@ -93,7 +86,7 @@ class OnlineProcessor:
     def classify_single_trial(self, trial_data: np.ndarray, highlights_labels: np.ndarray,):
         """
 
-        :param trial_data: ndarray of size (num arrow types, num channels)
+        :param trial_data: ndarray of size (num arrow types, num channels, num_samples)
         :param highlights_labels: ndarray of arrow types, size (num arrow types, )
         :return: int label, predicted direction
         """

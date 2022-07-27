@@ -2,16 +2,17 @@ experiment_file:  'config_short_red-yellow.json' #'config_long_blue-green.json' 
 preprocess:
   # this folder should be in data/raw
   session_dir: 'ses-15-07-2022-short-rg'
-  min_pass_freq: 1
-  max_pass_freq: 15
-
+  min_pass_freq: 2
+  max_pass_freq: 10
+  selected_channels: [6, 7, 10, 5, 8, 11]
   apply_referencing: 'average'
 #  use decimate instead of downsample
-  decim_factor: 4
+  decim_factor: 2
+
 
 #  decimate_n:
   signal_duration_min: .1
-  signal_duration_max: .65
+  signal_duration_max: .6
 #  return_full: 0
 
 process:

@@ -51,6 +51,9 @@ def preprocess(global_config_dict: dict):
         # Implement the band-pass filter
         flow, fhigh = preprocess_config['min_pass_freq'], preprocess_config['max_pass_freq']
         raw_filt = raw.filter(flow, fhigh)
+        # raw_filt = raw_filt.pick(preprocess_config['selected_channels'])
+        # raw_filt, _ = mne.set_eeg_reference(raw_filt, 'average', copy=True, ch_type='eeg')
+
 
         # Now we want to epoch our data to trials and do a baseline correction.
         total_trial_duration = params[GLOB.BASELINE_LENGTH] + params[GLOB.TARGET_LENGTH] + \
