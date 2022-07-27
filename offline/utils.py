@@ -523,7 +523,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
         epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
         epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
         epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average() , baseline_trial)
-        # #
+
         # epochs_down = ep[highlight_labels_trial == 2].average()
         # epochs_left = ep[highlight_labels_trial == 3].average()
         # epochs_right = ep[highlight_labels_trial == 4].average()
