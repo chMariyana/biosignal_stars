@@ -50,7 +50,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     cues = tmp_list
 
     # Use the timestamps from the messages as they are more reliable.
-    cue_times = [float(i[0].split("-")[1]) for i in marker_timestamp]
+    cue_times = [float(i[0].split("-")[1]) for i in marker_stream]
 
     # Get the smallest time stamp of both the data and marker stream
     offset = min(cue_times[0], raw_time[0])

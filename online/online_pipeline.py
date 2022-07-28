@@ -21,9 +21,6 @@ from pylsl import StreamInlet, StreamOutlet, StreamInfo, resolve_stream
 X_all = None
 
 def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
-    # Get the sampling frequency
-    sfreq = 250
-
     # Get the data --> only the first 8 rows are for the electrodes
     data = data_stream.T
     # Set the channel names
@@ -34,6 +31,9 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
 
     # Get the time stamps of the EEG recording
     raw_time = data_timestamp
+
+    # Get the effective sampling frequency from raw data
+    sfreq = len(raw_time) / (raw_time[-1] - raw_time[0])
 
     # Check if there are available marker streams
     cues = marker_stream
@@ -345,7 +345,7 @@ def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray,
 
     # reshape data and extract features
     X = trial_data[:, inds_selected_ch, :].reshape(trial_data.shape[0], -1)
-    print(X)
+
     # do some more stuff if needed
     trial_predictions = clf.predict(X)
     pred_label = highlights_labels[np.argmax(trial_predictions)]
@@ -362,6 +362,7 @@ def get_prediction(raw_trial, event_arr: np.ndarray, event_id: dict, inds_select
     :return: predicted label (arrow direction)
     """
     prep_data, highlights_labels = preprocess(raw_trial, event_arr, event_id)
+
 
     return classify_single_trial(prep_data, highlights_labels, inds_selected_ch)
 
@@ -401,7 +402,7 @@ if __name__ == '__main__':
     info = mne.create_info(ch_names, sfreq, ch_types)
     # Define the band-pass cutoff frequencies
     flow, fhigh = 2, 10
-    decim_factor = 4
+    decim_factor = 2
 
 
     # Supress MNE info messages and only show warnings
@@ -583,7 +584,7 @@ if __name__ == '__main__':
                                                   np.array(timestamps_buffer_marker))
 
             inds_selected_ch = [6, 7, 10, 5, 8, 11]
-            """x, highlights_labels = get_prediction(raw, event_arr, event_id, inds_selected_ch)
+            x, highlights_labels = get_prediction(raw, event_arr, event_id, inds_selected_ch)
 
             # Dummy code
             labelsss = np.roll(labelsss, 1)
@@ -604,7 +605,7 @@ if __name__ == '__main__':
             # bm._artists[1].set_data(x_range, thr)
             #bm._artists[3].set_data(x_range, car_data[idx])
             # bm._artists[4].set_data(x_range, thr)
-            bm.update()"""
+            bm.update()
 
             # We want the classification to happen at 10Hz.
             unpause_time = datetime.datetime.fromtimestamp((current_time + 100) / 1000.0)
