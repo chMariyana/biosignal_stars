@@ -402,8 +402,8 @@ if __name__ == '__main__':
     X_all = None
     highlights_labels_all = None
     predictions = []
-
-    with open("test_model.pickle", mode='rb') as opened_file:
+    modelfile = '/Users/mariyana.cholakova/Documents/mnse/sem4/bspm/git_repo/biosignal_stars/data/model/test_model.pickle'
+    with open(modelfile, mode='rb') as opened_file:
         clf = pickle.load(opened_file)
 
     # Set the channel names
