@@ -519,6 +519,17 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
         baseline_trial = ep_b.mean(0).mean(1)
         j += 1
         #
+        # baseline_std_trial = ep_b.std(-1).reshape(-1)
+        #
+        # epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == 2].average(), baseline_trial,
+        #                                       baseline_std_trial)
+        # epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average(), baseline_trial,
+        #                                       baseline_std_trial)
+        # epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial,
+        #                                        baseline_std_trial)
+        # epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average(), baseline_trial,
+        #                                     baseline_std_trial)
+        #
         epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == 2].average(), baseline_trial)
         epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
         epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
@@ -551,7 +562,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
            t_samples, epochs_highlights_, epoch_labels - 99, group_labels
 
 
-def correct_baseline_evoked(evoked, baseline):
+def correct_baseline_evoked(evoked, baseline, std_baseline=None):
     data = evoked.data
     if baseline is None:
         for i in range(data.shape[0]):
@@ -560,7 +571,10 @@ def correct_baseline_evoked(evoked, baseline):
     else:
 
         for i in range(data.shape[1]):
-            data[:, i] -= baseline
+            # data[:, i] -= baseline
+            data[:, i] /= baseline
+            if std_baseline is not None:
+                data[:, i] = data[:, i] / std_baseline
     evoked.data = data
 
     return evoked
@@ -638,13 +652,14 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
         # target_ = targets_seq[j]
         ep_b = epochs_baselines_[j].get_data()
         baseline_trial = ep_b.mean(0).mean(1)
+
         j += 1
         #
         epochs_down = correct_baseline_evoked(ep[highlight_labels_trial == 2].average(), baseline_trial)
         epochs_left = correct_baseline_evoked(ep[highlight_labels_trial == 3].average() , baseline_trial)
         epochs_right = correct_baseline_evoked(ep[highlight_labels_trial == 4].average(), baseline_trial)
         epochs_up = correct_baseline_evoked(ep[highlight_labels_trial == 5].average() , baseline_trial)
-        # #
+
         # epochs_down = ep[highlight_labels_trial == 2].average()
         # epochs_left = ep[highlight_labels_trial == 3].average()
         # epochs_right = ep[highlight_labels_trial == 4].average()

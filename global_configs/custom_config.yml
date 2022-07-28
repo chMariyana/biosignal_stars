@@ -10,8 +10,6 @@ preprocess:
   apply_referencing: 'average'
 #  use decimate instead of downsample
   decim_factor: 2
-
-
 #  decimate_n:
   signal_duration_min: .1
   signal_duration_max: .6
