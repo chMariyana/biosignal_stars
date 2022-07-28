@@ -487,11 +487,13 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
         #if i+n_highlights_per_trial >len(epochs_highlights_):
         # get all epochs of highlights for current trial i
         ep = epochs_highlights_[i: i + n_highlights_per_trial]
+        print(f'ep shape: {ep.get_data().shape}.')
         # get all labels of highlights for current trial i (2, 3, 4, 5 corresponding to 'down', 'left', etc.)
         highlight_labels_trial = highlights_seq[i: i + n_highlights_per_trial]
         # trial target
         # target_ = targets_seq[j]
         ep_b = epochs_baselines_[j].get_data()
+        print(f'ep_b shape: {ep_b.shape}')
         baseline_trial = ep_b.mean(0).mean(1)
         j += 1
         #

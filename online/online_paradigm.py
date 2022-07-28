@@ -153,6 +153,18 @@ class Paradigm(object):
 
         if delay is not None:
             pg.time.delay(int(delay*1000))
+    
+    def draw_baseline_fix(self, delay=1):
+        letter_surface = self.get_letter_surface('+', colour=WHITE)
+        letter_surface_rect = letter_surface.get_rect()
+        letter_surface_rect.center = (self.center_x, self.center_y)
+        self.window.blit(letter_surface, letter_surface_rect)
+
+        # Update the screen.
+        pg.display.flip()
+
+        if delay is not None:
+            pg.time.delay(int(delay*1000))
 
     def get_targets(self):
         # Create an empty list for the order of targets to run through.
@@ -300,18 +312,18 @@ class Paradigm(object):
                             self.window.blit(msg_classifier, msg_classifier_rect)
                             # Update the screen.
                             pg.display.flip()
-                        elif searching_for_classifier_stream:
-                            print("Looking for an EEG stream")
-                            streams = resolve_stream()
-                            print("Found one")
-                            
-                            # Make a simple menu to choose the correct stream.
-                            # In case multiple unicorns are set up.
-                            for idx, stream in enumerate(streams):
-                                if stream.name() == 'p500_markers':
-                                    print(f'Found the stream: {stream.name()}!')
-                                    self.classification_stream = StreamInlet(stream)
-                                    break
+                        #elif searching_for_classifier_stream:
+                        #    print("Looking for an EEG stream")
+                        #    streams = resolve_stream()
+                        #    print("Found one")
+                        #    
+                        #    # Make a simple menu to choose the correct stream.
+                        #    # In case multiple unicorns are set up.
+                        #    for idx, stream in enumerate(streams):
+                        #        if stream.name() == 'p500_markers':
+                        #            print(f'Found the stream: {stream.name()}!')
+                        #            self.classification_stream = StreamInlet(stream)
+                        #            break
 
                             # Now proceed as we would normally in the welcome screen.
 
@@ -356,6 +368,15 @@ class Paradigm(object):
                 )
                 paradigm.draw_interval_text('Select a direction', delay=params['baseline_length'])
                 paradigm.clear_screen()
+
+                # Show the baseline fix.
+                # Again, push the sample first because the drawing will hang.
+                self.marker_stream.push_sample(
+                    [f'baseline_for_trial_{trial_num}-{local_clock()}']
+                )
+                paradigm.draw_baseline_fix(delay=params['baseline_length'])
+                paradigm.clear_screen()
+
 
                 # Add a delay between the baseline and drawing the arrows.
                 pg.time.delay(int(params['delay_baseline_arrows'] * 1000))
@@ -406,18 +427,21 @@ class Paradigm(object):
                 # At the end of the trial, clear the screen again.
                 paradigm.clear_screen()
 
+                inter_trial_break = 3
+                pg.time.delay(int(inter_trial_break*1000))
+
                 # Show the selected target.
-                paradigm.draw_interval_text('Direction chosen is:', delay=params['baseline_length'])
-                paradigm.clear_screen()
+                #paradigm.draw_interval_text('Direction chosen is:', delay=params['baseline_length'])
+                #paradigm.clear_screen()
                 # TODO: Show chosen target.
-                target, _ = self.classification_stream.pull_sample()
-                target_position = self.convert_target(target)
-                paradigm.draw_arrows(target_position,
-                                     highlighted=False,
-                                     is_target=True,
-                                     display_time=params['target_length'])
-                paradigm.clear_screen()
-                pg.display.flip()
+                #target, _ = self.classification_stream.pull_sample()
+                #target_position = self.convert_target(target)
+                #paradigm.draw_arrows(target_position,
+                #                     highlighted=False,
+                #                     is_target=True,
+                #                     display_time=params['target_length'])
+                #paradigm.clear_screen()
+                #pg.display.flip()
 
                 # If the total number of trials within a block is reached.
                 if trial_num == self.tot_trials:
