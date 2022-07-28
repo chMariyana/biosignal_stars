@@ -1,4 +1,3 @@
-
 import numpy as np
 
 import mne
@@ -101,7 +100,6 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     event_id = dict(zip(list(le.classes_), range(len(le.classes_))))
 
     return raw, event_arr, event_id
-
 
 def load_xdf_data(file, with_stim=False):
 
@@ -409,7 +407,6 @@ def k_fold_LDA(concat_epochs, concat_epochs_ndarray, eeg_labels, n_features_to_s
     print(f'Max score: {np.max(scores)}, std: {np.std(scores)}.')
 
     return k_ldas, scores, selected_feature_idx
-
 
 def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_trial_duration, n_highlights_per_trial=30,
                    decim_facor=2, t_min=.1, t_max=.65):
