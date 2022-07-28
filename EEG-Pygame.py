@@ -1,4 +1,4 @@
-from re import A
+
 import pygame
 from pylsl import StreamInlet, resolve_stream 
 
@@ -238,33 +238,33 @@ while True:
                     x_p, y_p = 225, 600 # previous position of the robot
                     screen.fill(BLACK)
                     draw_initial()
-        else:
-            if type(sample[0]) is str:
-                #draw_input()
-                num_move += 1 # record the number of operations
-                print(num_move)
-                if sample[0] == 'Left':
-                    finalspeed = leftwall(x,y)
-                    if finalspeed > 0:
-                        x_p, y_p = x, y # record the previous position of the robot
-                        x -= finalspeed
-                        draw_left(x, y, x_p, y_p)
-                if sample[0] == 'Right':
-                    finalspeed,won = rightwall(x,y)
-                    if finalspeed > 0:
-                        x_p, y_p = x, y # record the previous position of the robot
-                        x += finalspeed
-                        draw_right(x, y, x_p, y_p)
-                    if won > 0:                     
-                        num_move = 50
-                        
-                if sample[0] == 'Up':
-                    finalspeed = upwall(x,y)
-                    if finalspeed > 0:
-                        x_p, y_p = x, y # record the previous position of the robot
-                        y -= finalspeed
-                        draw_up(x,y,x_p,y_p)
-            draw_gird()
+        # else:
+    if type(sample[0]) is str:
+        #draw_input()
+        num_move += 1 # record the number of operations
+        print(num_move)
+        if sample[0] == 'Left':
+            finalspeed = leftwall(x,y)
+            if finalspeed > 0:
+                x_p, y_p = x, y # record the previous position of the robot
+                x -= finalspeed
+                draw_left(x, y, x_p, y_p)
+        if sample[0] == 'Right':
+            finalspeed,won = rightwall(x,y)
+            if finalspeed > 0:
+                x_p, y_p = x, y # record the previous position of the robot
+                x += finalspeed
+                draw_right(x, y, x_p, y_p)
+            if won > 0:                     
+                num_move = 50
+                
+        if sample[0] == 'Up':
+            finalspeed = upwall(x,y)
+            if finalspeed > 0:
+                x_p, y_p = x, y # record the previous position of the robot
+                y -= finalspeed
+                draw_up(x,y,x_p,y_p)
+        draw_gird()
         if x<0:
             x=0
         if x>600:
@@ -273,5 +273,5 @@ while True:
             y=0
         if y>600:
             y=600
-        clock.ticks(30)
+        clock.tick(30)
         pygame.display.update()# update the window
