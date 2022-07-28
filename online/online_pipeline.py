@@ -334,7 +334,7 @@ def preprocess(raw, event_arr, event_id):
     # with open(output_file, 'wb') as opened_file:
     #     pickle.dump((x, y, full_data), opened_file)
 
-    return x, highlights_labels
+    return x, highlights_labels[-4:]
 
 def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray, inds_selected_ch, X_all=None):
     """
@@ -401,7 +401,7 @@ if __name__ == '__main__':
     info = mne.create_info(ch_names, sfreq, ch_types)
     # Define the band-pass cutoff frequencies
     flow, fhigh = 2, 10
-    decim_factor = 10
+    decim_factor = 4
 
 
     # Supress MNE info messages and only show warnings
@@ -571,6 +571,10 @@ if __name__ == '__main__':
 
             last_trial_end_time = trial_end_time
 
+            # The markers buffer has older data than eeg buffer, thus we need to align the two samples
+            oldest_stream_data = timestamps_buffer_stream[0]
+            correct_markers = [i for i in timestamps_buffer_marker if i > oldest_stream_data]
+            timestamps_buffer_marker = np.pad(correct_markers, (0, len(timestamps_buffer_marker) - len(correct_markers)))
             # Create MNE epoch
             #raw = mne.io.RawArray(np.array(samples_buffer_stream).T, info)
             raw, event_arr, event_id = create_raw(np.array(samples_buffer_stream),
@@ -579,7 +583,7 @@ if __name__ == '__main__':
                                                   np.array(timestamps_buffer_marker))
 
             inds_selected_ch = [6, 7, 10, 5, 8, 11]
-            x, highlights_labels = get_prediction(raw, event_arr, event_id, inds_selected_ch)
+            """x, highlights_labels = get_prediction(raw, event_arr, event_id, inds_selected_ch)
 
             # Dummy code
             labelsss = np.roll(labelsss, 1)
@@ -600,7 +604,7 @@ if __name__ == '__main__':
             # bm._artists[1].set_data(x_range, thr)
             #bm._artists[3].set_data(x_range, car_data[idx])
             # bm._artists[4].set_data(x_range, thr)
-            bm.update()
+            bm.update()"""
 
             # We want the classification to happen at 10Hz.
             unpause_time = datetime.datetime.fromtimestamp((current_time + 100) / 1000.0)

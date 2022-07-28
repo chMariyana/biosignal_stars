@@ -465,12 +465,12 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
 
     epochs_highlights_ = mne.Epochs(filtered_raw,
                                     events=event_arr_mod,
-                                    event_id={'highlight_down': event_id_orig['highlight_down']},
+                                    event_id=event_id_mod['h'],
                                     tmin=t_min,
                                     tmax=t_max,
                                     baseline=None,
                                     preload=True,
-                                    event_repeated='drop', decim=decim_facor)
+                                    event_repeated='drop', decim=decim_facor, reject=None)
     # Xdawn instance
     # xd = Xdawn(n_components=2, signal_cov=None)
     #
@@ -503,7 +503,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
         drop_list = list([list(item) for item in epochs_highlights_.drop_log])
         drop_list = [i for i in drop_list if i != ['IGNORED']]
         #all_highlights = np.unique(highlight_labels_trial)
-        highlight_labels_trial[[i == ['TOO_SHORT'] for i in drop_list]] = -1
+        highlight_labels_trial = highlight_labels_trial[[i != ['TOO_SHORT'] for i in drop_list]]
 
         # Dirty fix
         remaining_highlights = np.unique(highlight_labels_trial)
