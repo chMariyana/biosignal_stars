@@ -80,7 +80,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     # A line to supress an error message
     #raw._filenames = [file]
 
-    """# Convert time stamps of the Raw object to indices
+    # Convert time stamps of the Raw object to indices
     raw_indices = raw.time_as_index(times=raw.times)
 
     # Raise and error if the cue index is larger than the maximum
@@ -88,7 +88,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     if cue_indices.max() > raw_indices.max():
         raise Exception(
             'Cue index is larger than the largest sample index of the Raw object!'
-        )"""
+        )
 
     # Initialize the event array
     event_arr = np.zeros((len(cue_indices), 3), dtype=int)
@@ -470,7 +470,7 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
                                     tmax=t_max,
                                     baseline=None,
                                     preload=True,
-                                    event_repeated='drop', decim=decim_facor, reject=None)
+                                    event_repeated='drop', decim=decim_facor)
     # Xdawn instance
     # xd = Xdawn(n_components=2, signal_cov=None)
     #
