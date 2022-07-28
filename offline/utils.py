@@ -15,7 +15,8 @@ from sklearn.feature_selection import SequentialFeatureSelector
 
 def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     # Get the sampling frequency
-    sfreq = 250
+    sfreq = 128
+
 
     # Get the data --> only the first 8 rows are for the electrodes
     data = data_stream.T
@@ -271,7 +272,7 @@ def load_xdf_data(file, with_stim=False):
     return raw, event_arr, event_id
 
 
-def apply_filter_bank(signal, frequency_bands, sfreq=250):
+def apply_filter_bank(signal, frequency_bands, sfreq=128):
     # Function to apply filter bank to the signal
     filter_bank = []
     for fmin, fmax in frequency_bands.values():

@@ -18,8 +18,6 @@ from offline.utils import get_avg_evoked_online
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from pylsl import StreamInlet, StreamOutlet, StreamInfo, resolve_stream
 
-X_all = []
-
 def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
     # Get the data --> only the first 8 rows are for the electrodes
     data = data_stream.T
@@ -112,7 +110,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
 
 
 # Load the configurations of the paradigm
-with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_long_red-yellow.json'), 'r') as file:
+with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_short_red-yellow.json'), 'r') as file:
     params = json.load(file)
 SIGNAL_DURATION = 0.6
 apply_CAR = 0
@@ -365,7 +363,6 @@ def classify_single_trial(trial_data: np.ndarray, highlights_labels: np.ndarray,
     trial_predictions = clf.predict(X)
     pred_label = highlights_labels[np.argmax(trial_predictions)]
     predictions.append(pred_label)
-    #X_all = np.concatenate([X_all, X])
 
     return pred_label
 
@@ -601,7 +598,7 @@ if __name__ == '__main__':
                 # We can make the array smaller, so let's just try that.
                 timestamps_buffer_marker = timestamps_buffer_marker[len_incorrect_markers:]
                 samples_buffer_marker = samples_buffer_marker[len_incorrect_markers:]
-            
+
             # Check if pause is still there.
             cue_times = [float(i[0].split("-")[1]) for i in samples_buffer_marker]
             cues = [label[0].split('-')[0] for label in samples_buffer_marker]
