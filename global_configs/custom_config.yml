@@ -1,7 +1,7 @@
 experiment_file: 'config_short_red-yellow.json' #'config_long_blue-green.json' #  'config_short_red-yellow.json'
 preprocess:
   # this folder should be in data/raw
-  session_dir:  'ses-15-07-2022-short-rg'#'ses-lg'
+  session_dir:   'ses-15-07-2022-short-rg-test'#'ses-lg'
 #  'ses-15-07-2022-short-rg'
   min_pass_freq: 2
   max_pass_freq: 10
@@ -14,6 +14,9 @@ preprocess:
   signal_duration_min: .1
   signal_duration_max: .6
 #  return_full: 0
+  apply_xdown: False
+  xdown_file_load: '/Users/mariyana.cholakova/Documents/mnse/sem4/bspm/git_repo/biosignal_stars/notebooks/xdown.pickle'
+  xdown_file_save: '/Users/mariyana.cholakova/Documents/mnse/sem4/bspm/git_repo/biosignal_stars/notebooks/xdown.pickle'
 
 process:
   n_folds:

@@ -445,9 +445,9 @@ def get_labeled_dataset(epochs_highlights_targets: mne.Epochs, epochs_highlights
 
 
 def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_duration, n_highlights_per_trial=30,
-                   decim_facor=2, t_min=.1, t_max=.65):
+                   decim_facor=2, t_min=.1, t_max=.65, apply_xdown=False, xdown_path=None):
     event_labels = event_arr_orig[:, 2]
-    event_times = event_arr_orig[:, 0]
+    # event_times = event_arr_orig[:, 0]
 
     # inds_hd = np.where(event_labels==2)[0]
     # inds_hl = np.where(event_labels==3)[0]
@@ -493,12 +493,24 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
                                     preload=True,
                                     event_repeated='drop', decim=decim_facor)
     # Xdawn instance
-    # xd = Xdawn(n_components=2, signal_cov=None)
+    # just saving
+    event_arr_, _ = modify_events(event_arr_orig.copy(), event_id_orig.copy())
+    epoch_labels = event_arr_[:, 2]
+    epoch_labels = epoch_labels[epoch_labels > 21]
     #
+    xd = None
+    if apply_xdown:
+        print(f"Applying Xdown")
     # # Fit xdawn
-    # xd.fit_transform(epochs_highlights_)
-    # epochs_highlights_ = xd.apply(epochs_highlights_)['h']
+        if xdown_path is not None:
+            with open(xdown_path, mode='rb') as opened_file:
+                xd = pickle.load(opened_file)
+        else:
+            xd = Xdawn(n_components=5, signal_cov=None, )
 
+            xd.fit(epochs_highlights_, y=epoch_labels)
+
+    epochs_highlights_ = xd.apply(epochs_highlights_)['h']
     highlights_seq = event_arr_orig[:, 2][event_arr_mod[:, 2] == 20]
 
     targets_final = []
@@ -559,7 +571,7 @@ def get_avg_evoked(filtered_raw, event_arr_orig, event_id_orig, total_trial_dura
     epoch_labels = epoch_labels[epoch_labels > 21]
 
     return highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, \
-           t_samples, epochs_highlights_, epoch_labels - 99, group_labels
+           t_samples, epochs_highlights_, epoch_labels - 99, group_labels, xd
 
 
 def correct_baseline_evoked(evoked, baseline, std_baseline=None):
@@ -571,8 +583,8 @@ def correct_baseline_evoked(evoked, baseline, std_baseline=None):
     else:
 
         for i in range(data.shape[1]):
-            # data[:, i] -= baseline
-            data[:, i] /= baseline
+            data[:, i] -= baseline
+            # data[:, i] /= baseline
             if std_baseline is not None:
                 data[:, i] = data[:, i] / std_baseline
     evoked.data = data

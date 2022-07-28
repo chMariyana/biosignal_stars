@@ -62,7 +62,8 @@ def preprocess(global_config_dict: dict):
         print(f"getting avg evokeds: ")
 
         print(f"{total_trial_duration,highlights_per_trial,preprocess_config['decim_factor']}")
-        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq, t_samples, h_epochs, labels_epochs, groups=\
+        highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq,\
+        t_samples, h_epochs, labels_epochs, groups, xd =\
             get_avg_evoked(raw_filt,
                            event_arr.copy(),
                            event_id.copy(),
@@ -70,7 +71,9 @@ def preprocess(global_config_dict: dict):
                            highlights_per_trial,
                            decim_facor=preprocess_config['decim_factor'],
                            t_min=preprocess_config['signal_duration_min'],
-                           t_max=preprocess_config['signal_duration_max']
+                           t_max=preprocess_config['signal_duration_max'],
+                           apply_xdown=preprocess_config['apply_xdown'],
+                           xdown_path=preprocess_config['xdown_file_load']
                            )
         chnum, size = highlights_final_evoked[0].get_data().shape
         x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked])
@@ -82,10 +85,13 @@ def preprocess(global_config_dict: dict):
                                    f'preprocessed_{run[:-3]}pickle')
         Path(os.path.join(GLOB.PREP_OUTPUT_DATA_DIR, preprocess_config['session_dir'])).mkdir(parents=True, exist_ok=True)
         full_data = (highlights_final_evoked, targets_final, targets_seq, highlights_labels, highlights_seq,
-                     t_samples, h_epochs, labels_epochs, groups, global_config_dict)
+                     t_samples, h_epochs, labels_epochs, groups, global_config_dict, xd)
 
         with open(output_file, 'wb') as opened_file:
             pickle.dump((x, y, full_data), opened_file)
+
+        with open(preprocess_config['xdown_file_save'], 'wb') as opened_file:
+            pickle.dump(xd, opened_file)
 
     # Concatenate the epochs
     # epochs = mne.concatenate_epochs(epochs_list)

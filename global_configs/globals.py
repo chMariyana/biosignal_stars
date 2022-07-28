@@ -9,7 +9,9 @@ import os
 PROJECT_DIR = Path(os.path.abspath(os.path.curdir)).resolve().parent
 OFFLINE_CONFIG_DIR = os.path.join(PROJECT_DIR, 'offline', 'configs')
 DATA_DIR = os.path.join(PROJECT_DIR, 'data')
-PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output')
+# PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output')
+PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output_xdown')
+
 # PREP_OUTPUT_DATA_DIR = os.path.join(DATA_DIR, 'preprocess_output_baseline_z')
 GLOBAL_CONFIG_FILE = os.path.join(PROJECT_DIR, 'global_configs', 'custom_config.yml')
 
