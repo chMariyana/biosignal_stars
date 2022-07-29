@@ -461,6 +461,8 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
                                    preload=True,
                                    event_repeated='drop', decim=decim_facor)
 
+    print()
+
     epochs_highlights_ = mne.Epochs(filtered_raw,
                                     events=event_arr_mod,
                                     event_id=event_id_mod['h'],
@@ -538,6 +540,8 @@ def get_avg_evoked_online(filtered_raw, event_arr_orig, event_id_orig, total_tri
         highlights_final_evoked.append(epochs_right)
 
         highlights_final_evoked.append(epochs_up)
+
+        print(f'highlight_up: {epochs_up}.')
 
         highlights_labels.extend([event_id_orig['highlight_down'], event_id_orig['highlight_left'], event_id_orig['highlight_right'], event_id_orig['highlight_up']])
         # targets_final.extend([target_] * 4)

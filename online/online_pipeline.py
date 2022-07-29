@@ -13,6 +13,17 @@ from tqdm import tqdm
 import pause
 import datetime
 import re
+
+## Nathan's dirty hacks
+
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+
 from offline.utils import get_avg_evoked_online
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -110,7 +121,7 @@ def create_raw(data_stream, marker_stream, data_timestamp, marker_timestamp):
 
 
 # Load the configurations of the paradigm
-with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_short_red-yellow.json'), 'r') as file:
+with open(os.path.join(os.path.curdir, '..', 'offline', 'configs', 'config_long_red-yellow.json'), 'r') as file:
     params = json.load(file)
 SIGNAL_DURATION = 0.6
 apply_CAR = 0
@@ -332,6 +343,7 @@ def preprocess(raw, event_arr, event_id):
                                                                        t_max=.6)
 
     chnum, size = highlights_final_evoked[0].get_data().shape
+    print(f'chnum: {chnum}, size: {size}.')
     x = np.concatenate([x.get_data().reshape(1, chnum, size) for x in highlights_final_evoked[-4:]])
     #
     # with open(output_file, 'wb') as opened_file:
@@ -403,7 +415,7 @@ if __name__ == '__main__':
     highlights_labels_all = None
     predictions = []
 
-    with open("test_model.pickle", mode='rb') as opened_file:
+    with open("online/test_model.pickle", mode='rb') as opened_file:
         clf = pickle.load(opened_file)
 
     # Set the channel names
