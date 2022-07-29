@@ -616,9 +616,14 @@ if __name__ == '__main__':
             cues = [label[0].split('-')[0] for label in samples_buffer_marker]
 
             if 'pause' in cues:
-                trial_end_time = cue_times[cues.index('pause')]
-                if type(trial_end_time) == list:
-                    trial_end_time = trial_end_time[-1]
+                try:
+                    index_pos = len(cues) - cues[::-1].index('pause') - 1
+                    #print(cues)
+                    #print(f'index pos: {index_pos}.')
+                    trial_end_time = cue_times[index_pos]
+                    #print(trial_end_time)
+                except ValueError as e:
+                    print(f'Pause not found in the list: ', e)
             else:
                 continue
 
